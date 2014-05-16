@@ -51,7 +51,7 @@ class jpeg:
     candidates = find_header(header)
 
     if not candidates:
-      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?", name, header, name)
+      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?" % (self.name, header, self.name))
 
     found = False
 
@@ -80,7 +80,7 @@ class jpeg:
           break
 
     if not found:
-      raise RuntimeError("could not find the required (%s) version of %s on the file system (looked at: %s)" % (requirement, name, ', '.join(candidates)))
+      raise RuntimeError("could not find the required (%s) version of %s on the file system (looked at: %s)" % (requirement, self.name, ', '.join(candidates)))
 
     # normalize
     self.include_directory = os.path.normpath(self.include_directory)
@@ -91,7 +91,7 @@ class jpeg:
     candidates = find_library(module, version=self.version, prefixes=[prefix], only_static=only_static)
 
     if not candidates:
-      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (name, module, prefix))
+      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
 
     # libraries
     self.libraries = []
@@ -148,7 +148,7 @@ class gif:
     candidates = find_header(header)
 
     if not candidates:
-      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?", name, header, name)
+      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?" % (self.name, header, self.name))
 
     found = False
 
@@ -177,7 +177,7 @@ class gif:
           break
 
     if not found:
-      raise RuntimeError("could not find the required (%s) version of %s on the file system (looked at: %s)" % (requirement, name, ', '.join(candidates)))
+      raise RuntimeError("could not find the required (%s) version of %s on the file system (looked at: %s)" % (requirement, self.name, ', '.join(candidates)))
 
     # normalize
     self.include_directory = os.path.normpath(self.include_directory)
@@ -188,7 +188,7 @@ class gif:
     candidates = find_library(module, version=self.version, prefixes=[prefix], only_static=only_static)
 
     if not candidates:
-      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (name, module, prefix))
+      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
 
     # libraries
     self.libraries = []
@@ -230,7 +230,7 @@ class netpbm:
     candidates = find_header(header, subpaths=[self.name])
 
     if not candidates:
-      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?", name, header, name)
+      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?" % (self.name, header, self.name))
 
     self.include_directory = os.path.dirname(candidates[0])
     found = True
@@ -244,7 +244,7 @@ class netpbm:
     candidates = find_library(module, prefixes=[prefix], only_static=only_static)
 
     if not candidates:
-      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (name, module, prefix))
+      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
 
     # libraries
     self.libraries = []
