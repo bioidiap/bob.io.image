@@ -10,9 +10,18 @@
 
 .. todolist::
 
-This module contains base functionality from Bob bound to Python, available in
-the C++ counter-part ``bob::io``. It includes input and output operations to
-and from files.
+This module provides a plugin for :py:mod:`xbob.io.base` that allows |project|
+to read and write images using its native API (:py:func:`xbob.io.base.load` and
+:py:func:`xbob.io.base.save`).
+
+At present, this plugin provides support for the following types of images:
+
+* TIFF
+* JPEG
+* GIF
+* PNG
+* BMP
+* Netpbm images (PGM, PPM, PBM)
 
 Documentation
 -------------
@@ -22,7 +31,6 @@ Documentation
 
    guide
    py_api
-   c_cpp_api
 
 Indices and tables
 ------------------
