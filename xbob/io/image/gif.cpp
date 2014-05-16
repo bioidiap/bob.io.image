@@ -17,6 +17,8 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
+#include <bob/io/File.h>
+
 extern "C" {
 #include <gif_lib.h>
 }
@@ -646,6 +648,6 @@ class ImageGifFile: public bob::io::File {
 
 std::string ImageGifFile::s_codecname = "bob.image_gif";
 
-boost::shared_ptr<bob::io::File> make_giff_file (const char* path, char mode) {
+boost::shared_ptr<bob::io::File> make_gif_file (const char* path, char mode) {
   return boost::make_shared<ImageGifFile>(path, mode);
 }

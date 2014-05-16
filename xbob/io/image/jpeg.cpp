@@ -18,6 +18,8 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
+#include <bob/io/File.h>
+
 #include <jpeglib.h>
 
 // Default JPEG quality

@@ -7,8 +7,8 @@
  * Copyright (C) 2011-2014 Idiap Research Institute, Martigny, Switzerland
  */
 
-#ifndef BOB_IO_MATLAB_FILE_H
-#define BOB_IO_MATLAB_FILE_H
+#ifndef BOB_IO_IMAGE_FILE_H
+#define BOB_IO_IMAGE_FILE_H
 
 #include <boost/shared_ptr.hpp>
 #include <bob/io/File.h>
@@ -38,4 +38,4 @@ boost::shared_ptr<bob::io::File> make_netpbm_file (const char* path, char mode);
 boost::shared_ptr<bob::io::File> make_png_file (const char* path, char mode);
 boost::shared_ptr<bob::io::File> make_bmp_file (const char* path, char mode);
 
-#endif /* BOB_IO_MATLAB_FILE_H */
+#endif /* BOB_IO_IMAGE_FILE_H */

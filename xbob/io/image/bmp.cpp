@@ -17,8 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob/io/CodecRegistry.h>
-#include <bob/core/logging.h>
+#include <bob/io/File.h>
 
 // The following documentation is mostly coming from wikipedia:
 // http://en.wikipedia.org/wiki/BMP_file_format

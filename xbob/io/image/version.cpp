@@ -57,7 +57,7 @@ static int dict_steal(PyObject* d, const char* key, PyObject* value) {
  */
 static PyObject* libjpeg_version() {
   boost::format f("%d (compiled with %d bits depth)");
-  f % JPEG_LIB_VERSION;
+  f % LIBJPEG_VERSION;
   f % BITS_IN_JSAMPLE;
   return Py_BuildValue("s", f.str().c_str());
 }

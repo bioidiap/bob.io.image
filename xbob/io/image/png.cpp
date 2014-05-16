@@ -17,7 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob/io/CodecRegistry.h>
+#include <bob/io/File.h>
 
 extern "C" {
 #include <png.h>

@@ -17,6 +17,8 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
+#include <bob/io/File.h>
+
 extern "C" {
 // This header must come last, as it brings a lot of global stuff that messes up other headers...
 #include <pam.h>
@@ -315,7 +317,7 @@ class ImageNetpbmFile: public bob::io::File {
 
   public: //api
 
-    ImageNetpbmFile(const std::string& path, char mode):
+    ImageNetpbmFile(const char* path, char mode):
       m_filename(path),
       m_newfile(true) {
 
@@ -341,8 +343,8 @@ class ImageNetpbmFile: public bob::io::File {
 
     virtual ~ImageNetpbmFile() { }
 
-    virtual const std::string& filename() const {
-      return m_filename;
+    virtual const char* filename() const {
+      return m_filename.c_str();
     }
 
     virtual const bob::core::array::typeinfo& type_all() const {
@@ -357,8 +359,8 @@ class ImageNetpbmFile: public bob::io::File {
       return m_length;
     }
 
-    virtual const std::string& name() const {
-      return s_codecname;
+    virtual const char* name() const {
+      return s_codecname.c_str();
     }
 
     virtual void read_all(bob::core::array::interface& buffer) {
@@ -415,7 +417,7 @@ std::string ImageNetpbmFile::s_codecname = "bob.image_netpbm";
 
 static bool netpbm_initialized = false;
 
-boost::shared_ptr<bob::io::File> make_netpbm_file (const std::string& path, char mode) {
+boost::shared_ptr<bob::io::File> make_netpbm_file (const char* path, char mode) {
   if (!netpbm_initialized) {
     pm_init("bob",0);
     netpbm_initialized = true;

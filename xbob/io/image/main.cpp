@@ -81,8 +81,7 @@ static PyObject* create_module (void) {
     }
   }
   else {
-    PyErr_Format(PyExc_RuntimeError, "LibJPEG compiled with " << BITS_IN_JSAMPLE <<
-      " bits depth (instead of 8). JPEG images are hence not supported.");
+    PyErr_Format(PyExc_RuntimeError, "libjpeg compiled with `%d' bits depth (instead of 8). JPEG images are hence not supported.", BITS_IN_JSAMPLE);
     PyErr_Print();
   }
 

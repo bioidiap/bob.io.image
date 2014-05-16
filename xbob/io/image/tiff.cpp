@@ -17,6 +17,8 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
+#include <bob/io/File.h>
+
 extern "C" {
 #include <tiffio.h>
 }
