@@ -2,23 +2,23 @@
 .. Andre Anjos <andre.anjos@idiap.ch>
 .. Thu 29 Aug 2013 16:07:57 CEST
 
-.. image:: https://travis-ci.org/bioidiap/xbob.io.matlab.svg?branch=master
-   :target: https://travis-ci.org/bioidiap/xbob.io.matlab
-.. image:: https://coveralls.io/repos/bioidiap/xbob.io.matlab/badge.png
-   :target: https://coveralls.io/r/bioidiap/xbob.io.matlab
-.. image:: http://img.shields.io/github/tag/bioidiap/xbob.io.matlab.png
-   :target: https://github.com/bioidiap/xbob.io.matlab
-.. image:: http://img.shields.io/pypi/v/xbob.io.matlab.png
-   :target: https://pypi.python.org/pypi/xbob.io.matlab
-.. image:: http://img.shields.io/pypi/dm/xbob.io.matlab.png
-   :target: https://pypi.python.org/pypi/xbob.io.matlab
+.. image:: https://travis-ci.org/bioidiap/xbob.io.image.svg?branch=master
+   :target: https://travis-ci.org/bioidiap/xbob.io.image
+.. image:: https://coveralls.io/repos/bioidiap/xbob.io.image/badge.png
+   :target: https://coveralls.io/r/bioidiap/xbob.io.image
+.. image:: http://img.shields.io/github/tag/bioidiap/xbob.io.image.png
+   :target: https://github.com/bioidiap/xbob.io.image
+.. image:: http://img.shields.io/pypi/v/xbob.io.image.png
+   :target: https://pypi.python.org/pypi/xbob.io.image
+.. image:: http://img.shields.io/pypi/dm/xbob.io.image.png
+   :target: https://pypi.python.org/pypi/xbob.io.image
 
-===================================
- Support for Matlab I/O in bob::io
-===================================
+===========================
+ Image I/O Support for Bob
+===========================
 
 This package contains no bindings. By importing it, you activate a transparent
-plugin that makes possible reading and writing to Matlab(R) files using
+plugin that makes possible reading and writing to image files using
 :py:mod:`xbob.io.base` functionality.
 
 Installation
@@ -26,6 +26,48 @@ Installation
 
 Install it through normal means, via PyPI or use ``zc.buildout`` to bootstrap
 the package and run test units.
+
+External Library Requirements
+=============================
+
+To properly install this package, you will need the following C/C++ components
+pre-installed:
+
+1. ``bob-io >= 2.0.0a2``
+2. ``libtiff-4``
+3. ``libpng``
+4. ``libjpeg``
+5. ``giflib``
+6. ``netpbm``
+
+To test for the availability of the libraries listed above, use the command
+``pkg-config``::
+
+  $ pkg-config --modversion libtiff-4
+  4.0.2
+  $ pkg-config --modversion bob-io
+  2.0.0a3
+
+.. note::
+
+   Unfortunately, ``libjpeg``, ``giflib`` and ``netpbm`` do **not** offer
+   ``pkg-config`` files as of this time. Detection is based on an algorithm
+   implemented inside ``setup.py``. There are no version requirements on these
+   libraries. Any version will work.
+
+   If these libraries are installed in non-standard paths on your system, make
+   sure to set ``prefixes`` variable on your buildout.
+
+If any of the components is not installed on paths accessible by
+``pkg-config``, you have two options:
+
+1. Set the environment variable ``PKG_CONFIG_PATH`` so that ``.pc`` files for
+   each of those distributions can be properly located (see ``man pkg-config``
+   for details);
+
+2. If you are using ``zc.buildout`` to setup your working environment, you can
+   use the buildout variable ``prefixes`` to define the path to the
+   installation area for your external packages.
 
 Documentation
 -------------
@@ -46,7 +88,7 @@ application, make sure to import this module, before calling
 :py:func:`xbob.io.base.open` or similar::
 
     >>> import xbob.io.base
-    >>> import xbob.io.matlab
+    >>> import xbob.io.image
     >>> xbob.io.base.open('myfile.mat', 'r')
 
 Testing
@@ -54,7 +96,7 @@ Testing
 
 You can run a set of tests using the nose test runner::
 
-  $ nosetests -sv xbob.io.matlab
+  $ nosetests -sv xbob.io.image
 
 .. warning::
 
@@ -71,7 +113,7 @@ You can run our documentation tests using sphinx itself::
 
 You can test overall test coverage with::
 
-  $ nosetests --with-coverage --cover-package=xbob.io.matlab
+  $ nosetests --with-coverage --cover-package=xbob.io.image
 
 The ``coverage`` egg must be installed for this to work properly.
 
