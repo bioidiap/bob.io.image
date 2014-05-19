@@ -11,7 +11,7 @@ import xbob.io.base
 
 include_dirs = [xbob.io.base.get_include()]
 
-packages = ['bob-io >= 2.0.0a2', 'libtiff-4', 'libpng']
+packages = ['bob-io >= 2.0.0a2', 'libpng']
 version = '2.0.0a0'
 
 def libjpeg_version(header):
@@ -88,6 +88,102 @@ class jpeg:
     # find library
     prefix = os.path.dirname(os.path.dirname(self.include_directory))
     module = 'jpeg'
+    candidates = find_library(module, version=self.version, prefixes=[prefix], only_static=only_static)
+
+    if not candidates:
+      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
+
+    # libraries
+    self.libraries = []
+    name, ext = os.path.splitext(os.path.basename(candidates[0]))
+    if ext in ['.so', '.a', '.dylib', '.dll']:
+      self.libraries.append(name[3:]) #strip 'lib' from the name
+    else: #link against the whole thing
+      self.libraries.append(':' + os.path.basename(candidates[0]))
+
+    # library path
+    self.library_directory = os.path.dirname(candidates[0])
+
+  def macros(self):
+    return [
+        ('HAVE_%s' % self.name.upper(), '1'),
+        ('%s_VERSION' % self.name.upper(), '"%s"' % self.version),
+        ]
+
+def libtiff_version(header):
+
+  version = egrep(header, r"#\s*define\s+TIFFLIB_VERSION_STR\s+\"LIBTIFF,\s+Version\s+([\d\.]+).*")
+  if not len(version): return None
+  return version[0].group(1)
+
+class tiff:
+
+  def __init__ (self, requirement='', only_static=False):
+    """
+    Searches for libtiff in stock locations. Allows user to override.
+
+    If the user sets the environment variable XBOB_PREFIX_PATH, that prefixes
+    the standard path locations.
+
+    Parameters:
+
+    requirement, str
+      A string, indicating a version requirement for this library. For example,
+      ``'>= 8.2'``.
+
+    only_static, boolean
+      A flag, that indicates if we intend to link against the static library
+      only. This will trigger our library search to disconsider shared
+      libraries when searching.
+    """
+
+    self.name = 'libtiff'
+    header = 'tiff.h'
+
+    candidates = find_header(header)
+
+    if not candidates:
+      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?" % (self.name, header, self.name))
+
+    found = False
+
+    if not requirement:
+      self.include_directory = os.path.dirname(candidates[0])
+      directory = os.path.dirname(candidates[0])
+      version_header = os.path.join(directory, 'tiffvers.h')
+      self.version = libtiff_version(version_header)
+      found = True
+
+    else:
+
+      # requirement is 'operator' 'version'
+      operator, required = [k.strip() for k in requirement.split(' ', 1)]
+
+      # now check for user requirements
+      for candidate in candidates:
+        directory = os.path.dirname(candidate)
+        version_header = os.path.join(directory, 'tiffvers.h')
+        version = libtiff_version(version_header)
+        available = LooseVersion(version)
+        if (operator == '<' and available < required) or \
+           (operator == '<=' and available <= required) or \
+           (operator == '>' and available > required) or \
+           (operator == '>=' and available >= required) or \
+           (operator == '==' and available == required):
+          self.include_directory = os.path.dirname(candidate)
+          self.version = version
+          found = True
+          break
+
+    if not found:
+      raise RuntimeError("could not find the required (%s) version of %s on the file system (looked at: %s)" % (requirement, self.name, ', '.join(candidates)))
+
+    # normalize
+    self.include_directory = os.path.normpath(self.include_directory)
+
+    # find library
+    prefix = os.path.dirname(os.path.dirname(self.include_directory))
+    module = 'tiff'
     candidates = find_library(module, version=self.version, prefixes=[prefix], only_static=only_static)
 
     if not candidates:
@@ -261,28 +357,33 @@ class netpbm:
     return [ ('HAVE_%s' % self.name.upper(), '1'), ]
 
 jpeg_pkg = jpeg()
+tiff_pkg = tiff()
 gif_pkg = gif()
 netpbm_pkg = netpbm()
 
 extra_compile_args = [
     '-isystem', jpeg_pkg.include_directory,
+    '-isystem', tiff_pkg.include_directory,
     '-isystem', gif_pkg.include_directory,
     '-isystem', netpbm_pkg.include_directory,
     ]
 
 library_dirs = [
     jpeg_pkg.library_directory,
+    tiff_pkg.library_directory,
     gif_pkg.library_directory,
     netpbm_pkg.library_directory,
     ]
 
 libraries = \
     jpeg_pkg.libraries + \
+    tiff_pkg.libraries + \
     gif_pkg.libraries + \
     netpbm_pkg.libraries
 
 define_macros = \
     jpeg_pkg.macros() + \
+    tiff_pkg.macros() + \
     gif_pkg.macros() + \
     netpbm_pkg.macros()
 
