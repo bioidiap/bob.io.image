@@ -227,7 +227,7 @@ class netpbm:
     self.name = 'netpbm'
     header = 'pam.h'
 
-    candidates = find_header(header, subpaths=[self.name])
+    candidates = find_header(header, subpaths=[self.name, ''])
 
     if not candidates:
       raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?" % (self.name, header, self.name))
