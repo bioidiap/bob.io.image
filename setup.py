@@ -11,7 +11,7 @@ import xbob.io.base
 
 include_dirs = [xbob.io.base.get_include()]
 
-packages = ['bob-io >= 2.0.0a2', 'libpng']
+packages = ['boost', 'bob-io >= 2.0.0a2', 'libpng']
 version = '2.0.0a0'
 
 def libjpeg_version(header):
@@ -209,7 +209,12 @@ class tiff:
 def libgif_version(header):
 
   version = egrep(header, r"#\s*define\s+GIFLIB_(RELEASE|MINOR|MAJOR)\s+(\d+)")
-  if not len(version): return None
+  if not len(version):
+    version = egrep(header, r"#\s*define\s+GIF_LIB_VERSION\s+\"\s*Version\s+([\d\.]+).*\"")
+    if not len(version): return None
+
+    # old style
+    return version[0].group(1)
 
   # we have a match, produce a string version of the version number
   major = int(version[0].group(2))
@@ -419,6 +424,7 @@ setup(
           "xbob/io/image/version.cpp",
           ],
         packages = packages,
+        boost_modules = ['system'],
         include_dirs = include_dirs,
         version = version,
         extra_compile_args = extra_compile_args,
@@ -437,6 +443,7 @@ setup(
           "xbob/io/image/main.cpp",
           ],
         packages = packages,
+        boost_modules = ['filesystem'],
         include_dirs = include_dirs,
         version = version,
         extra_compile_args = extra_compile_args,
