@@ -7,7 +7,7 @@
 ============
 
 This section includes information for using the pure Python API of
-``xbob.io.image``.
+``bob.io.image``.
 
-.. automodule:: xbob.io.image
+.. automodule:: bob.io.image
 

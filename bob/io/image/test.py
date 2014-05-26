@@ -10,7 +10,7 @@
 
 import os
 import numpy
-from xbob.io.base import load, write, test_utils
+from bob.io.base import load, write, test_utils
 
 # These are some global parameters for the test.
 PNG_INDEXED_COLOR = test_utils.datafile('img_indexed_color.png', __name__)

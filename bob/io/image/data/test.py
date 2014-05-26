@@ -13,8 +13,8 @@ import sys
 import numpy
 import nose.tools
 
-from xbob.io.base import load, test_utils
-from xbob.io.base.test_file import transcode, array_readwrite, arrayset_readwrite
+from bob.io.base import load, test_utils
+from bob.io.base.test_file import transcode, array_readwrite, arrayset_readwrite
 
 def test_all():
 

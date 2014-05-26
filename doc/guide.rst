@@ -5,8 +5,8 @@
 .. testsetup:: *
 
    import numpy
-   import xbob.io.base
-   import xbob.io.image
+   import bob.io.base
+   import bob.io.image
    import tempfile
    import os
 
@@ -23,9 +23,9 @@ writing routines to load and save files using various image formats.
 
 .. code-block:: python
 
-   >> import xbob.io.base
-   >> import xbob.io.image #under the hood: loads Bob plugin for image files
-   >> x = xbob.io.base.load('myfile.jpg')
+   >> import bob.io.base
+   >> import bob.io.image #under the hood: loads Bob plugin for image files
+   >> x = bob.io.base.load('myfile.jpg')
 
 In the following example, an image generated randomly using the method `NumPy`
 :py:meth:`numpy.random.random_integers`, is saved in JPEG format. The image
@@ -34,8 +34,8 @@ must be of type ``uint8`` or ``uint16``:
 .. doctest::
 
   >>> my_image = numpy.random.random_integers(0,255,(3,256,256))
-  >>> xbob.io.base.save(my_image.astype('uint8'), 'testimage.jpg') # saving the image in jpeg format
-  >>> my_image_copy = xbob.io.base.load('testimage.jpg')
+  >>> bob.io.base.save(my_image.astype('uint8'), 'testimage.jpg') # saving the image in jpeg format
+  >>> my_image_copy = bob.io.base.load('testimage.jpg')
 
 The loaded image files can be 3D arrays (for RGB format) or 2D arrays (for
 greyscale) of type ``uint8`` or ``uint16``.

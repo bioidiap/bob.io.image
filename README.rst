@@ -2,16 +2,16 @@
 .. Andre Anjos <andre.anjos@idiap.ch>
 .. Thu 29 Aug 2013 16:07:57 CEST
 
-.. image:: https://travis-ci.org/bioidiap/xbob.io.image.svg?branch=master
-   :target: https://travis-ci.org/bioidiap/xbob.io.image
-.. image:: https://coveralls.io/repos/bioidiap/xbob.io.image/badge.png
-   :target: https://coveralls.io/r/bioidiap/xbob.io.image
-.. image:: http://img.shields.io/github/tag/bioidiap/xbob.io.image.png
-   :target: https://github.com/bioidiap/xbob.io.image
-.. image:: http://img.shields.io/pypi/v/xbob.io.image.png
-   :target: https://pypi.python.org/pypi/xbob.io.image
-.. image:: http://img.shields.io/pypi/dm/xbob.io.image.png
-   :target: https://pypi.python.org/pypi/xbob.io.image
+.. image:: https://travis-ci.org/bioidiap/bob.io.image.svg?branch=master
+   :target: https://travis-ci.org/bioidiap/bob.io.image
+.. image:: https://coveralls.io/repos/bioidiap/bob.io.image/badge.png
+   :target: https://coveralls.io/r/bioidiap/bob.io.image
+.. image:: http://img.shields.io/github/tag/bioidiap/bob.io.image.png
+   :target: https://github.com/bioidiap/bob.io.image
+.. image:: http://img.shields.io/pypi/v/bob.io.image.png
+   :target: https://pypi.python.org/pypi/bob.io.image
+.. image:: http://img.shields.io/pypi/dm/bob.io.image.png
+   :target: https://pypi.python.org/pypi/bob.io.image
 
 ===========================
  Image I/O Support for Bob
@@ -19,7 +19,7 @@
 
 This package contains no bindings. By importing it, you activate a transparent
 plugin that makes possible reading and writing to image files using
-:py:mod:`xbob.io.base` functionality.
+:py:mod:`bob.io.base` functionality.
 
 Installation
 ------------
@@ -85,18 +85,18 @@ Usage
 
 In order to enable support for Matlab(R) file reading and writing in your
 application, make sure to import this module, before calling
-:py:func:`xbob.io.base.open` or similar::
+:py:func:`bob.io.base.open` or similar::
 
-    >>> import xbob.io.base
-    >>> import xbob.io.image
-    >>> xbob.io.base.open('myfile.mat', 'r')
+    >>> import bob.io.base
+    >>> import bob.io.image
+    >>> bob.io.base.open('myfile.mat', 'r')
 
 Testing
 -------
 
 You can run a set of tests using the nose test runner::
 
-  $ nosetests -sv xbob.io.image
+  $ nosetests -sv bob.io.image
 
 .. warning::
 
@@ -113,7 +113,7 @@ You can run our documentation tests using sphinx itself::
 
 You can test overall test coverage with::
 
-  $ nosetests --with-coverage --cover-package=xbob.io.image
+  $ nosetests --with-coverage --cover-package=bob.io.image
 
 The ``coverage`` egg must be installed for this to work properly.
 

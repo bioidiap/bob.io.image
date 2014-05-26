@@ -10,9 +10,9 @@
 
 .. todolist::
 
-This module provides a plugin for :py:mod:`xbob.io.base` that allows |project|
-to read and write images using its native API (:py:func:`xbob.io.base.load` and
-:py:func:`xbob.io.base.save`).
+This module provides a plugin for :py:mod:`bob.io.base` that allows |project|
+to read and write images using its native API (:py:func:`bob.io.base.load` and
+:py:func:`bob.io.base.save`).
 
 At present, this plugin provides support for the following types of images:
 

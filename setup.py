@@ -4,12 +4,12 @@
 # Mon 16 Apr 08:18:08 2012 CEST
 
 from setuptools import setup, find_packages, dist
-dist.Distribution(dict(setup_requires=['xbob.blitz', 'xbob.io.base']))
-from xbob.extension.utils import egrep, find_header, find_library
-from xbob.blitz.extension import Extension
-import xbob.io.base
+dist.Distribution(dict(setup_requires=['bob.blitz', 'bob.io.base']))
+from bob.extension.utils import egrep, find_header, find_library
+from bob.blitz.extension import Extension
+import bob.io.base
 
-include_dirs = [xbob.io.base.get_include()]
+include_dirs = [bob.io.base.get_include()]
 
 packages = ['boost', 'bob-io >= 2.0.0a2', 'libpng']
 version = '2.0.0a0'
@@ -30,7 +30,7 @@ class jpeg:
     """
     Searches for libjpeg in stock locations. Allows user to override.
 
-    If the user sets the environment variable XBOB_PREFIX_PATH, that prefixes
+    If the user sets the environment variable BOB_PREFIX_PATH, that prefixes
     the standard path locations.
 
     Parameters:
@@ -122,7 +122,7 @@ class tiff:
     """
     Searches for libtiff in stock locations. Allows user to override.
 
-    If the user sets the environment variable XBOB_PREFIX_PATH, that prefixes
+    If the user sets the environment variable BOB_PREFIX_PATH, that prefixes
     the standard path locations.
 
     Parameters:
@@ -228,7 +228,7 @@ class gif:
     """
     Searches for libgif in stock locations. Allows user to override.
 
-    If the user sets the environment variable XBOB_PREFIX_PATH, that prefixes
+    If the user sets the environment variable BOB_PREFIX_PATH, that prefixes
     the standard path locations.
 
     Parameters:
@@ -314,7 +314,7 @@ class netpbm:
     """
     Searches for netpbm in stock locations. Allows user to override.
 
-    If the user sets the environment variable XBOB_PREFIX_PATH, that prefixes
+    If the user sets the environment variable BOB_PREFIX_PATH, that prefixes
     the standard path locations.
 
     Parameters:
@@ -394,10 +394,10 @@ define_macros = \
 
 setup(
 
-    name='xbob.io.image',
+    name='bob.io.image',
     version=version,
     description='Image I/O support for Bob',
-    url='http://github.com/bioidiap/xbob.io.image',
+    url='http://github.com/bioidiap/bob.io.image',
     license='BSD',
     author='Andre Anjos',
     author_email='andre.anjos@idiap.ch',
@@ -409,19 +409,19 @@ setup(
 
     install_requires=[
       'setuptools',
-      'xbob.blitz',
-      'xbob.io.base',
+      'bob.blitz',
+      'bob.io.base',
     ],
 
     namespace_packages=[
-      "xbob",
-      "xbob.io",
+      "bob",
+      "bob.io",
       ],
 
     ext_modules = [
-      Extension("xbob.io.image.version",
+      Extension("bob.io.image.version",
         [
-          "xbob/io/image/version.cpp",
+          "bob/io/image/version.cpp",
           ],
         packages = packages,
         boost_modules = ['system'],
@@ -432,15 +432,15 @@ setup(
         libraries = libraries,
         define_macros = define_macros,
         ),
-      Extension("xbob.io.image._library",
+      Extension("bob.io.image._library",
         [
-          "xbob/io/image/tiff.cpp",
-          "xbob/io/image/gif.cpp",
-          "xbob/io/image/png.cpp",
-          "xbob/io/image/jpeg.cpp",
-          "xbob/io/image/bmp.cpp",
-          "xbob/io/image/netpbm.cpp",
-          "xbob/io/image/main.cpp",
+          "bob/io/image/tiff.cpp",
+          "bob/io/image/gif.cpp",
+          "bob/io/image/png.cpp",
+          "bob/io/image/jpeg.cpp",
+          "bob/io/image/bmp.cpp",
+          "bob/io/image/netpbm.cpp",
+          "bob/io/image/main.cpp",
           ],
         packages = packages,
         boost_modules = ['filesystem'],
