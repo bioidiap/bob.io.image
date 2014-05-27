@@ -1,33 +1,38 @@
-# After changing this file, run it through http://lint.travis-ci.org/
-# Generates 4 builds, the ones for python3 will install external wheels
 language: python
-python:
-  - 2.6
-  - 2.7
 matrix:
   include:
-    - python: 3.2
-      env:
-        - NUMPYSPEC===1.7.1
-    - python: 3.3
-      env:
-        - NUMPYSPEC===1.8.0
+  - python: 2.6
+  - python: 2.7
+    env:
+    - secure: F8PfOJ9nGrtZdTcv132jrx5spnzFfpFCSMtea4TLwvotbFc7/gHVEu2UeLktWuVVnL715MSbJ8aXAFR918qwwJsCop0fnPNtgC70nLbYUNWvyOSzvm6JwXA9cYHvAgxYA4Y1folXcz+0bIQqD0MkBM/1yiLivS1kHP3K2jrdWNk=
+    - secure: YAMap+9kNi9om5b4h1leawWrpgkvt1iIv3UVkfp0zTSM9kb1qVjJxWd75IxjbVSGXQ5hoMAgyOzCwOFoa4r3LMf8bBtStZ4zeoaichxEQHr05C5BXgHFDWUnFdpInvODMbfznySdxiLLWQ6kJFldmdFwYizJxcKxSWqL4EQ3Snw=
+  - python: 3.2
+    env:
+    - NUMPYSPEC===1.7.1
+  - python: 3.3
+    env:
+    - NUMPYSPEC===1.8.0
 before_install:
-  - sudo add-apt-repository -y ppa:biometrics/bob
-  - sudo add-apt-repository -y ppa:biometrics/bob.preview
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq --force-yes bob-dev libjpeg8-dev libnetpbm10-dev libpng12-dev libtiff4-dev libgif-dev
-  - if [ -n "${NUMPYSPEC}" ]; then sudo apt-get install -qq libatlas-dev libatlas-base-dev liblapack-dev gfortran; fi
-  - if [ -n "${NUMPYSPEC}" ]; then pip install --upgrade pip setuptools; fi
-  - if [ -n "${NUMPYSPEC}" ]; then pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel numpy$NUMPYSPEC sphinx nose; fi
-  - pip install cpp-coveralls
+- sudo add-apt-repository -y ppa:biometrics/bob
+- sudo add-apt-repository -y ppa:biometrics/bob.preview
+- sudo apt-get update -qq
+- sudo apt-get install -qq --force-yes bob-dev libjpeg8-dev libnetpbm10-dev libpng12-dev
+  libtiff4-dev libgif-dev
+- if [ -n "${NUMPYSPEC}" ]; then sudo apt-get install -qq libatlas-dev libatlas-base-dev
+  liblapack-dev gfortran; fi
+- if [ -n "${NUMPYSPEC}" ]; then pip install --upgrade pip setuptools; fi
+- if [ -n "${NUMPYSPEC}" ]; then pip install --find-links http://wheels.astropy.org/
+  --find-links http://wheels2.astropy.org/ --use-wheel numpy$NUMPYSPEC sphinx nose;
+  fi
+- pip install cpp-coveralls
 install:
-  - "python bootstrap.py"
-  - "CFLAGS=-coverage ./bin/buildout"
+- python bootstrap.py
+- CFLAGS=-coverage ./bin/buildout
 script:
-  - "./bin/python -c 'from bob.io.image import get_config; print(get_config())'"
-  - "./bin/coverage run --source=bob.io.image ./bin/nosetests -sv"
-  - "./bin/sphinx-build -b doctest doc sphinx"
-  - "./bin/sphinx-build -b html doc sphinx"
+- ./bin/python -c 'from bob.io.image import get_config; print(get_config())'
+- ./bin/coverage run --source=bob.io.image ./bin/nosetests -sv
+- ./bin/sphinx-build -b doctest doc sphinx
+- ./bin/sphinx-build -b html doc sphinx
 after_success:
-  - "coveralls --build-root=`pwd` --exclude=src"
+- coveralls --build-root=`pwd` --exclude=src
+- ./src/bob.extension/scripts/upload-sphinx.sh
