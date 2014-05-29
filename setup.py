@@ -3,6 +3,7 @@
 # Andre Anjos <andre.anjos@idiap.ch>
 # Mon 16 Apr 08:18:08 2012 CEST
 
+import os
 from setuptools import setup, find_packages, dist
 dist.Distribution(dict(setup_requires=['bob.blitz', 'bob.io.base']))
 from bob.extension.utils import egrep, find_header, find_library
