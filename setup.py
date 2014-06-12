@@ -25,6 +25,12 @@ def libjpeg_version(header):
   minor = int(version[1].group(2))
   return '%d.%d' % (major, minor)
 
+def libjpeg_turbo_version(header):
+
+  version = egrep(header, r"#\s*define\s+LIBJPEG_TURBO_VERSION\s+([\d\.]+)")
+  if not len(version): return None
+  return version[0].group(1) + ' (turbo)'
+
 class jpeg:
 
   def __init__ (self, requirement='', only_static=False):
@@ -59,6 +65,13 @@ class jpeg:
     if not requirement:
       self.include_directory = os.path.dirname(candidates[0])
       self.version = libjpeg_version(candidates[0])
+
+      # special condition (using libjpeg-turbo instead)
+      if self.version is None:
+        turbo_candidates = find_header('jconfig.h')
+        if turbo_candidates:
+          self.version = libjpeg_turbo_version(turbo_candidates[0])
+
       found = True
 
     else:
