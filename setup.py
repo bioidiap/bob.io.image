@@ -5,14 +5,11 @@
 
 import os
 from setuptools import setup, find_packages, dist
-dist.Distribution(dict(setup_requires=['bob.blitz', 'bob.io.base']))
+dist.Distribution(dict(setup_requires=['bob.blitz', 'bob.core', 'bob.io.base']))
 from bob.extension.utils import egrep, find_header, find_library
 from bob.blitz.extension import Extension
-import bob.io.base
 
-include_dirs = [bob.io.base.get_include()]
-
-packages = ['boost', 'bob-io >= 2.0.0a2', 'libpng']
+packages = ['boost', 'libpng']
 version = '2.0.0a0'
 
 def libjpeg_version(header):
@@ -440,7 +437,7 @@ setup(
           ],
         packages = packages,
         boost_modules = ['system'],
-        include_dirs = include_dirs,
+        bob_packages = ['bob.core', 'bob.io.base'],
         version = version,
         extra_compile_args = extra_compile_args,
         library_dirs = library_dirs,
@@ -459,7 +456,7 @@ setup(
           ],
         packages = packages,
         boost_modules = ['filesystem'],
-        include_dirs = include_dirs,
+        bob_packages = ['bob.core', 'bob.io.base'],
         version = version,
         extra_compile_args = extra_compile_args,
         library_dirs = library_dirs,

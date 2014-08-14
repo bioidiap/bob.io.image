@@ -17,7 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob/io/File.h>
+#include <bob.io.base/File.h>
 
 extern "C" {
 // This header must come last, as it brings a lot of global stuff that messes up other headers...
@@ -42,7 +42,7 @@ static boost::shared_ptr<std::FILE> make_cfile(const char *filename, const char 
 /**
  * LOADING
  */
-static void im_peek(const std::string& path, bob::core::array::typeinfo& info) {
+static void im_peek(const std::string& path, bob::io::base::array::typeinfo& info) {
 
   struct pam in_pam;
   boost::shared_ptr<std::FILE> in_file = make_cfile(path.c_str(), "r");
@@ -75,8 +75,8 @@ static void im_peek(const std::string& path, bob::core::array::typeinfo& info) {
   info.update_strides();
 
   // Set depth
-  if (in_pam.bytes_per_sample == 1) info.dtype = bob::core::array::t_uint8;
-  else if (in_pam.bytes_per_sample == 2) info.dtype = bob::core::array::t_uint16;
+  if (in_pam.bytes_per_sample == 1) info.dtype = bob::io::base::array::t_uint8;
+  else if (in_pam.bytes_per_sample == 2) info.dtype = bob::io::base::array::t_uint16;
   else {
     boost::format m("unsupported image depth (%d bytes per samples) when reading file");
     m % in_pam.bytes_per_sample;
@@ -85,8 +85,8 @@ static void im_peek(const std::string& path, bob::core::array::typeinfo& info) {
 }
 
 template <typename T> static
-void im_load_gray(struct pam *in_pam, bob::core::array::interface& b) {
-  const bob::core::array::typeinfo& info = b.type();
+void im_load_gray(struct pam *in_pam, bob::io::base::array::interface& b) {
+  const bob::io::base::array::typeinfo& info = b.type();
 
   T *element = static_cast<T*>(b.ptr());
   tuple *tuplerow = pnm_allocpamrow(in_pam);
@@ -112,8 +112,8 @@ void imbuffer_to_rgb(size_t size, const tuple* tuplerow, T* r, T* g, T* b) {
 }
 
 template <typename T> static
-void im_load_color(struct pam *in_pam, bob::core::array::interface& b) {
-  const bob::core::array::typeinfo& info = b.type();
+void im_load_color(struct pam *in_pam, bob::io::base::array::interface& b) {
+  const bob::io::base::array::typeinfo& info = b.type();
 
   long unsigned int frame_size = info.shape[2] * info.shape[1];
   T *element_r = static_cast<T*>(b.ptr());
@@ -133,7 +133,7 @@ void im_load_color(struct pam *in_pam, bob::core::array::interface& b) {
   pnm_freepamrow(tuplerow);
 }
 
-static void im_load (const std::string& filename, bob::core::array::interface& b) {
+static void im_load (const std::string& filename, bob::io::base::array::interface& b) {
 
   struct pam in_pam;
   boost::shared_ptr<std::FILE> in_file = make_cfile(filename.c_str(), "r");
@@ -144,9 +144,9 @@ static void im_load (const std::string& filename, bob::core::array::interface& b
   pnm_readpaminit(in_file.get(), &in_pam, sizeof(struct pam));
 #endif
 
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
 
-  if (info.dtype == bob::core::array::t_uint8) {
+  if (info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 2) im_load_gray<uint8_t>(&in_pam, b);
     else if( info.nd == 3) im_load_color<uint8_t>(&in_pam, b);
     else {
@@ -156,7 +156,7 @@ static void im_load (const std::string& filename, bob::core::array::interface& b
     }
   }
 
-  else if (info.dtype == bob::core::array::t_uint16) {
+  else if (info.dtype == bob::io::base::array::t_uint16) {
     if(info.nd == 2) im_load_gray<uint16_t>(&in_pam, b);
     else if( info.nd == 3) im_load_color<uint16_t>(&in_pam, b);
     else {
@@ -177,8 +177,8 @@ static void im_load (const std::string& filename, bob::core::array::interface& b
  * SAVING
  */
 template <typename T>
-static void im_save_gray(const bob::core::array::interface& b, struct pam *out_pam) {
-  const bob::core::array::typeinfo& info = b.type();
+static void im_save_gray(const bob::io::base::array::interface& b, struct pam *out_pam) {
+  const bob::io::base::array::typeinfo& info = b.type();
 
   const T *element = static_cast<const T*>(b.ptr());
 
@@ -203,8 +203,8 @@ void rgb_to_imbuffer(size_t size, const T* r, const T* g, const T* b, tuple* tup
 }
 
 template <typename T>
-static void im_save_color(const bob::core::array::interface& b, struct pam *out_pam) {
-  const bob::core::array::typeinfo& info = b.type();
+static void im_save_color(const bob::io::base::array::interface& b, struct pam *out_pam) {
+  const bob::io::base::array::typeinfo& info = b.type();
 
   long unsigned int frame_size = info.shape[2] * info.shape[1];
   const T *element_r = static_cast<const T*>(b.ptr());
@@ -223,9 +223,9 @@ static void im_save_color(const bob::core::array::interface& b, struct pam *out_
   pnm_freepamrow(tuplerow);
 }
 
-static void im_save (const std::string& filename, const bob::core::array::interface& array) {
+static void im_save (const std::string& filename, const bob::io::base::array::interface& array) {
 
-  const bob::core::array::typeinfo& info = array.type();
+  const bob::io::base::array::typeinfo& info = array.type();
 
   struct pam out_pam;
   boost::shared_ptr<std::FILE> out_file = make_cfile(filename.c_str(), "w");
@@ -246,8 +246,8 @@ static void im_save (const std::string& filename, const bob::core::array::interf
   out_pam.height = (info.nd == 2 ? info.shape[0] : info.shape[1]);
   out_pam.width = (info.nd == 2 ? info.shape[1] : info.shape[2]);
   out_pam.depth = (info.nd == 2 ? 1 : 3);
-  out_pam.maxval = (bob::core::array::t_uint8 ? 255 : 65535);
-  out_pam.bytes_per_sample = (info.dtype == bob::core::array::t_uint8 ? 1 : 2);
+  out_pam.maxval = (bob::io::base::array::t_uint8 ? 255 : 65535);
+  out_pam.bytes_per_sample = (info.dtype == bob::io::base::array::t_uint8 ? 1 : 2);
   out_pam.format = PAM_FORMAT;
   if( ext.compare(".pbm") == 0)
   {
@@ -274,7 +274,7 @@ static void im_save (const std::string& filename, const bob::core::array::interf
   pnm_writepaminit(&out_pam);
 
   // Writes content
-  if(info.dtype == bob::core::array::t_uint8) {
+  if(info.dtype == bob::io::base::array::t_uint8) {
 
     if(info.nd == 2) im_save_gray<uint8_t>(array, &out_pam);
     else if(info.nd == 3) {
@@ -289,7 +289,7 @@ static void im_save (const std::string& filename, const bob::core::array::interf
 
   }
 
-  else if(info.dtype == bob::core::array::t_uint16) {
+  else if(info.dtype == bob::io::base::array::t_uint16) {
 
     if(info.nd == 2) im_save_gray<uint16_t>(array, &out_pam);
     else if(info.nd == 3) {
@@ -313,7 +313,7 @@ static void im_save (const std::string& filename, const bob::core::array::interf
 
 
 
-class ImageNetpbmFile: public bob::io::File {
+class ImageNetpbmFile: public bob::io::base::File {
 
   public: //api
 
@@ -347,11 +347,11 @@ class ImageNetpbmFile: public bob::io::File {
       return m_filename.c_str();
     }
 
-    virtual const bob::core::array::typeinfo& type_all() const {
+    virtual const bob::io::base::array::typeinfo& type_all() const {
       return m_type;
     }
 
-    virtual const bob::core::array::typeinfo& type() const {
+    virtual const bob::io::base::array::typeinfo& type() const {
       return m_type;
     }
 
@@ -363,11 +363,11 @@ class ImageNetpbmFile: public bob::io::File {
       return s_codecname.c_str();
     }
 
-    virtual void read_all(bob::core::array::interface& buffer) {
+    virtual void read_all(bob::io::base::array::interface& buffer) {
       read(buffer, 0); ///we only have 1 image in an image file anyways
     }
 
-    virtual void read(bob::core::array::interface& buffer, size_t index) {
+    virtual void read(bob::io::base::array::interface& buffer, size_t index) {
 
       if (m_newfile)
         throw std::runtime_error("uninitialized image file cannot be read");
@@ -381,7 +381,7 @@ class ImageNetpbmFile: public bob::io::File {
       im_load(m_filename, buffer);
     }
 
-    virtual size_t append (const bob::core::array::interface& buffer) {
+    virtual size_t append (const bob::io::base::array::interface& buffer) {
       if (m_newfile) {
         im_save(m_filename, buffer);
         m_type = buffer.type();
@@ -393,7 +393,7 @@ class ImageNetpbmFile: public bob::io::File {
       throw std::runtime_error("image files only accept a single array");
     }
 
-    virtual void write (const bob::core::array::interface& buffer) {
+    virtual void write (const bob::io::base::array::interface& buffer) {
       //overwriting position 0 should always work
       if (m_newfile) {
         append(buffer);
@@ -406,7 +406,7 @@ class ImageNetpbmFile: public bob::io::File {
   private: //representation
     std::string m_filename;
     bool m_newfile;
-    bob::core::array::typeinfo m_type;
+    bob::io::base::array::typeinfo m_type;
     size_t m_length;
 
     static std::string s_codecname;
@@ -417,7 +417,7 @@ std::string ImageNetpbmFile::s_codecname = "bob.image_netpbm";
 
 static bool netpbm_initialized = false;
 
-boost::shared_ptr<bob::io::File> make_netpbm_file (const char* path, char mode) {
+boost::shared_ptr<bob::io::base::File> make_netpbm_file (const char* path, char mode) {
   if (!netpbm_initialized) {
     pm_init("bob",0);
     netpbm_initialized = true;

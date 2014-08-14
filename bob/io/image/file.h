@@ -11,7 +11,7 @@
 #define BOB_IO_IMAGE_FILE_H
 
 #include <boost/shared_ptr.hpp>
-#include <bob/io/File.h>
+#include <bob.io.base/File.h>
 
 /**
  * This defines the factory method F that can create codecs of this type.
@@ -31,11 +31,11 @@
  * Returns a newly allocated File object that can read and write data to the
  * file using a specific backend.
  */
-boost::shared_ptr<bob::io::File> make_tiff_file (const char* path, char mode);
-boost::shared_ptr<bob::io::File> make_jpeg_file (const char* path, char mode);
-boost::shared_ptr<bob::io::File> make_gif_file (const char* path, char mode);
-boost::shared_ptr<bob::io::File> make_netpbm_file (const char* path, char mode);
-boost::shared_ptr<bob::io::File> make_png_file (const char* path, char mode);
-boost::shared_ptr<bob::io::File> make_bmp_file (const char* path, char mode);
+boost::shared_ptr<bob::io::base::File> make_tiff_file (const char* path, char mode);
+boost::shared_ptr<bob::io::base::File> make_jpeg_file (const char* path, char mode);
+boost::shared_ptr<bob::io::base::File> make_gif_file (const char* path, char mode);
+boost::shared_ptr<bob::io::base::File> make_netpbm_file (const char* path, char mode);
+boost::shared_ptr<bob::io::base::File> make_png_file (const char* path, char mode);
+boost::shared_ptr<bob::io::base::File> make_bmp_file (const char* path, char mode);
 
 #endif /* BOB_IO_IMAGE_FILE_H */

@@ -17,7 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob/io/File.h>
+#include <bob.io.base/File.h>
 
 extern "C" {
 #include <tiffio.h>
@@ -37,7 +37,7 @@ static boost::shared_ptr<TIFF> make_cfile(const char *filename, const char *flag
 /**
  * LOADING
  */
-static void im_peek(const std::string& path, bob::core::array::typeinfo& info)
+static void im_peek(const std::string& path, bob::io::base::array::typeinfo& info)
 {
   // 1. TIFF file opening
   boost::shared_ptr<TIFF> in_file = make_cfile(path.c_str(), "r");
@@ -54,7 +54,7 @@ static void im_peek(const std::string& path, bob::core::array::typeinfo& info)
   TIFFGetField(in_file.get(), TIFFTAG_SAMPLESPERPIXEL, &spp);
 
   // 3. Set typeinfo variables
-  info.dtype = (bps <= 8 ? bob::core::array::t_uint8 : bob::core::array::t_uint16);
+  info.dtype = (bps <= 8 ? bob::io::base::array::t_uint8 : bob::io::base::array::t_uint16);
   if(spp == 1)
     info.nd = 2;
   else if (spp == 3)
@@ -79,9 +79,9 @@ static void im_peek(const std::string& path, bob::core::array::typeinfo& info)
 }
 
 template <typename T> static
-void im_load_gray(boost::shared_ptr<TIFF> in_file, bob::core::array::interface& b)
+void im_load_gray(boost::shared_ptr<TIFF> in_file, bob::io::base::array::interface& b)
 {
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
   const size_t height = info.shape[0];
   const size_t width = info.shape[1];
 
@@ -154,9 +154,9 @@ void imbuffer_to_rgb(const size_t size, const T* im, T* r, T* g, T* b)
 }
 
 template <typename T> static
-void im_load_color(boost::shared_ptr<TIFF> in_file, bob::core::array::interface& b)
+void im_load_color(boost::shared_ptr<TIFF> in_file, bob::io::base::array::interface& b)
 {
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
   const size_t height = info.shape[1];
   const size_t width = info.shape[2];
   const size_t frame_size = height*width;
@@ -225,14 +225,14 @@ void im_load_color(boost::shared_ptr<TIFF> in_file, bob::core::array::interface&
   }
 }
 
-static void im_load(const std::string& filename, bob::core::array::interface& b)
+static void im_load(const std::string& filename, bob::io::base::array::interface& b)
 {
   // 1. TIFF file opening
   boost::shared_ptr<TIFF> in_file = make_cfile(filename.c_str(), "r");
 
   // 2. Read content
-  const bob::core::array::typeinfo& info = b.type();
-  if(info.dtype == bob::core::array::t_uint8) {
+  const bob::io::base::array::typeinfo& info = b.type();
+  if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 2) im_load_gray<uint8_t>(in_file, b);
     else if( info.nd == 3) im_load_color<uint8_t>(in_file, b);
     else {
@@ -241,7 +241,7 @@ static void im_load(const std::string& filename, bob::core::array::interface& b)
       throw std::runtime_error(m.str());
     }
   }
-  else if(info.dtype == bob::core::array::t_uint16) {
+  else if(info.dtype == bob::io::base::array::t_uint16) {
     if(info.nd == 2) im_load_gray<uint16_t>(in_file, b);
     else if( info.nd == 3) im_load_color<uint16_t>(in_file, b);
     else {
@@ -262,9 +262,9 @@ static void im_load(const std::string& filename, bob::core::array::interface& b)
  * SAVING
  */
 template <typename T>
-static void im_save_gray(const bob::core::array::interface& b, boost::shared_ptr<TIFF> out_file)
+static void im_save_gray(const bob::io::base::array::interface& b, boost::shared_ptr<TIFF> out_file)
 {
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
   const size_t height = info.shape[0];
   const size_t width = info.shape[1];
 
@@ -287,9 +287,9 @@ void rgb_to_imbuffer(const size_t size, const T* r, const T* g, const T* b, T* i
 }
 
 template <typename T>
-static void im_save_color(const bob::core::array::interface& b, boost::shared_ptr<TIFF> out_file)
+static void im_save_color(const bob::io::base::array::interface& b, boost::shared_ptr<TIFF> out_file)
 {
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
   const size_t height = info.shape[1];
   const size_t width = info.shape[2];
   const size_t frame_size = height * width;
@@ -309,18 +309,18 @@ static void im_save_color(const bob::core::array::interface& b, boost::shared_pt
   TIFFWriteEncodedStrip(out_file.get(), 0, row_pointer, data_size);
 }
 
-static void im_save(const std::string& filename, const bob::core::array::interface& array)
+static void im_save(const std::string& filename, const bob::io::base::array::interface& array)
 {
   // 1. Open the file
   boost::shared_ptr<TIFF> out_file = make_cfile(filename.c_str(), "w");
 
   // 2. Set the image information here:
-  const bob::core::array::typeinfo& info = array.type();
+  const bob::io::base::array::typeinfo& info = array.type();
   const int height = (info.nd == 2 ? info.shape[0] : info.shape[1]);
   const int width = (info.nd == 2 ? info.shape[1] : info.shape[2]);
   TIFFSetField(out_file.get(), TIFFTAG_IMAGELENGTH, height);
   TIFFSetField(out_file.get(), TIFFTAG_IMAGEWIDTH, width);
-  TIFFSetField(out_file.get(), TIFFTAG_BITSPERSAMPLE, (info.dtype == bob::core::array::t_uint8 ? 8 : 16));
+  TIFFSetField(out_file.get(), TIFFTAG_BITSPERSAMPLE, (info.dtype == bob::io::base::array::t_uint8 ? 8 : 16));
   TIFFSetField(out_file.get(), TIFFTAG_SAMPLESPERPIXEL, (info.nd == 2 ? 1 : 3));
 
   TIFFSetField(out_file.get(), TIFFTAG_COMPRESSION, COMPRESSION_NONE);
@@ -330,7 +330,7 @@ static void im_save(const std::string& filename, const bob::core::array::interfa
   TIFFSetField(out_file.get(), TIFFTAG_PHOTOMETRIC, (info.nd == 2 ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB));
 
   // 3. Writes content
-  if(info.dtype == bob::core::array::t_uint8) {
+  if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 2) im_save_gray<uint8_t>(array, out_file);
     else if(info.nd == 3) {
       if(info.shape[0] != 3)
@@ -343,7 +343,7 @@ static void im_save(const std::string& filename, const bob::core::array::interfa
       throw std::runtime_error(m.str());
     }
   }
-  else if(info.dtype == bob::core::array::t_uint16) {
+  else if(info.dtype == bob::io::base::array::t_uint16) {
     if(info.nd == 2) im_save_gray<uint16_t>(array, out_file);
     else if(info.nd == 3) {
       if(info.shape[0] != 3)
@@ -363,7 +363,7 @@ static void im_save(const std::string& filename, const bob::core::array::interfa
   }
 }
 
-class ImageTiffFile: public bob::io::File {
+class ImageTiffFile: public bob::io::base::File {
 
   public: //api
 
@@ -398,11 +398,11 @@ class ImageTiffFile: public bob::io::File {
       return m_filename.c_str();
     }
 
-    virtual const bob::core::array::typeinfo& type_all() const {
+    virtual const bob::io::base::array::typeinfo& type_all() const {
       return m_type;
     }
 
-    virtual const bob::core::array::typeinfo& type() const {
+    virtual const bob::io::base::array::typeinfo& type() const {
       return m_type;
     }
 
@@ -414,11 +414,11 @@ class ImageTiffFile: public bob::io::File {
       return s_codecname.c_str();
     }
 
-    virtual void read_all(bob::core::array::interface& buffer) {
+    virtual void read_all(bob::io::base::array::interface& buffer) {
       read(buffer, 0); ///we only have 1 image in an image file anyways
     }
 
-    virtual void read(bob::core::array::interface& buffer, size_t index) {
+    virtual void read(bob::io::base::array::interface& buffer, size_t index) {
       if (m_newfile)
         throw std::runtime_error("uninitialized image file cannot be read");
 
@@ -431,7 +431,7 @@ class ImageTiffFile: public bob::io::File {
       im_load(m_filename, buffer);
     }
 
-    virtual size_t append (const bob::core::array::interface& buffer) {
+    virtual size_t append (const bob::io::base::array::interface& buffer) {
       if (m_newfile) {
         im_save(m_filename, buffer);
         m_type = buffer.type();
@@ -443,7 +443,7 @@ class ImageTiffFile: public bob::io::File {
       throw std::runtime_error("image files only accept a single array");
     }
 
-    virtual void write (const bob::core::array::interface& buffer) {
+    virtual void write (const bob::io::base::array::interface& buffer) {
       //overwriting position 0 should always work
       if (m_newfile) {
         append(buffer);
@@ -456,7 +456,7 @@ class ImageTiffFile: public bob::io::File {
   private: //representation
     std::string m_filename;
     bool m_newfile;
-    bob::core::array::typeinfo m_type;
+    bob::io::base::array::typeinfo m_type;
     size_t m_length;
 
     static std::string s_codecname;
@@ -465,6 +465,6 @@ class ImageTiffFile: public bob::io::File {
 
 std::string ImageTiffFile::s_codecname = "bob.image_tiff";
 
-boost::shared_ptr<bob::io::File> make_tiff_file (const char* path, char mode) {
+boost::shared_ptr<bob::io::base::File> make_tiff_file (const char* path, char mode) {
   return boost::make_shared<ImageTiffFile>(path, mode);
 }

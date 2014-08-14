@@ -17,7 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob/io/File.h>
+#include <bob.io.base/File.h>
 
 // The following documentation is mostly coming from wikipedia:
 // http://en.wikipedia.org/wiki/BMP_file_format
@@ -601,7 +601,7 @@ static boost::shared_ptr<std::FILE> make_cfile(const char *filename, const char 
 /**
  * LOADING
  */
-static void im_peek(const std::string& path, bob::core::array::typeinfo& info) {
+static void im_peek(const std::string& path, bob::io::base::array::typeinfo& info) {
   // 1. BMP structures
   bmp_header_t bmp_hdr;
   bmp_dib_header_t bmp_dib_hdr;
@@ -621,7 +621,7 @@ static void im_peek(const std::string& path, bob::core::array::typeinfo& info) {
     throw std::runtime_error("bmp: error while parsing bmp header (current file position does not match the offset value indicating where the data is stored)");
 
   // 5.  Set depth and number of dimensions
-  info.dtype = bob::core::array::t_uint8;
+  info.dtype = bob::io::base::array::t_uint8;
   info.nd = 3;
   info.shape[0] = 3;
   info.shape[1] = bmp_dib_hdr.height;
@@ -629,7 +629,7 @@ static void im_peek(const std::string& path, bob::core::array::typeinfo& info) {
   info.update_strides();
 }
 
-static void im_load(const std::string& filename, bob::core::array::interface& b) {
+static void im_load(const std::string& filename, bob::io::base::array::interface& b) {
   // 1. BMP structures
   bmp_header_t bmp_hdr;
   bmp_dib_header_t bmp_dib_hdr;
@@ -651,7 +651,7 @@ static void im_load(const std::string& filename, bob::core::array::interface& b)
   bmp_read_raster(in_file.get(), &bmp_dib_hdr, n_bytes_per_row, rasterdata.get());
 
   // 6. Convert data using the color map and put it in the RGB buffer
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
   long unsigned int frame_size = info.shape[1] * info.shape[2];
   uint8_t *element_r = static_cast<uint8_t*>(b.ptr());
   uint8_t *element_g = element_r+frame_size;
@@ -863,9 +863,9 @@ static void bmp_write_dib_header(FILE * out_file, size_t height, size_t width)
 }
 
 // Save images in Windows V1 format with a 24 bits depth (without color map)
-static void im_save_color(const bob::core::array::interface& b, FILE * out_file)
+static void im_save_color(const bob::io::base::array::interface& b, FILE * out_file)
 {
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
 
   size_t height = info.shape[1];
   size_t width = info.shape[2];
@@ -905,14 +905,14 @@ static void im_save_color(const bob::core::array::interface& b, FILE * out_file)
   }
 }
 
-static void im_save(const std::string& filename, const bob::core::array::interface& array) {
-  const bob::core::array::typeinfo& info = array.type();
+static void im_save(const std::string& filename, const bob::io::base::array::interface& array) {
+  const bob::io::base::array::typeinfo& info = array.type();
 
   // 1. BMP file opening
   boost::shared_ptr<std::FILE> out_file = make_cfile(filename.c_str(), "wb");
 
   // 2. Write image
-  if(info.dtype == bob::core::array::t_uint8) {
+  if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 3) {
       if(info.shape[0] != 3) throw std::runtime_error("color image does not have 3 planes on 1st. dimension");
       im_save_color(array, out_file.get());
@@ -930,7 +930,7 @@ static void im_save(const std::string& filename, const bob::core::array::interfa
   }
 }
 
-class ImageBmpFile: public bob::io::File {
+class ImageBmpFile: public bob::io::base::File {
 
   public: //api
 
@@ -965,11 +965,11 @@ class ImageBmpFile: public bob::io::File {
       return m_filename.c_str();
     }
 
-    virtual const bob::core::array::typeinfo& type_all() const {
+    virtual const bob::io::base::array::typeinfo& type_all() const {
       return m_type;
     }
 
-    virtual const bob::core::array::typeinfo& type() const {
+    virtual const bob::io::base::array::typeinfo& type() const {
       return m_type;
     }
 
@@ -981,11 +981,11 @@ class ImageBmpFile: public bob::io::File {
       return s_codecname.c_str();
     }
 
-    virtual void read_all(bob::core::array::interface& buffer) {
+    virtual void read_all(bob::io::base::array::interface& buffer) {
       read(buffer, 0); ///we only have 1 image in an image file anyways
     }
 
-    virtual void read(bob::core::array::interface& buffer, size_t index) {
+    virtual void read(bob::io::base::array::interface& buffer, size_t index) {
       if (m_newfile)
         throw std::runtime_error("uninitialized image file cannot be read");
 
@@ -998,7 +998,7 @@ class ImageBmpFile: public bob::io::File {
       im_load(m_filename, buffer);
     }
 
-    virtual size_t append (const bob::core::array::interface& buffer) {
+    virtual size_t append (const bob::io::base::array::interface& buffer) {
       if (m_newfile) {
         im_save(m_filename, buffer);
         m_type = buffer.type();
@@ -1010,7 +1010,7 @@ class ImageBmpFile: public bob::io::File {
       throw std::runtime_error("image files only accept a single array");
     }
 
-    virtual void write (const bob::core::array::interface& buffer) {
+    virtual void write (const bob::io::base::array::interface& buffer) {
       //overwriting position 0 should always work
       if (m_newfile) {
         append(buffer);
@@ -1023,7 +1023,7 @@ class ImageBmpFile: public bob::io::File {
   private: //representation
     std::string m_filename;
     bool m_newfile;
-    bob::core::array::typeinfo m_type;
+    bob::io::base::array::typeinfo m_type;
     size_t m_length;
 
     static std::string s_codecname;
@@ -1032,6 +1032,6 @@ class ImageBmpFile: public bob::io::File {
 
 std::string ImageBmpFile::s_codecname = "bob.image_bmp";
 
-boost::shared_ptr<bob::io::File> make_bmp_file (const char* path, char mode) {
+boost::shared_ptr<bob::io::base::File> make_bmp_file (const char* path, char mode) {
   return boost::make_shared<ImageBmpFile>(path, mode);
 }

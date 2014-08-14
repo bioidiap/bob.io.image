@@ -17,7 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob/io/File.h>
+#include <bob.io.base/File.h>
 
 extern "C" {
 #include <gif_lib.h>
@@ -312,13 +312,13 @@ static boost::shared_ptr<GifFileType> make_efile(const char *filename)
 /**
  * LOADING
  */
-static void im_peek(const std::string& path, bob::core::array::typeinfo& info)
+static void im_peek(const std::string& path, bob::io::base::array::typeinfo& info)
 {
   // 1. GIF file opening
   boost::shared_ptr<GifFileType> in_file = make_dfile(path.c_str());
 
   // 2. Set typeinfo variables
-  info.dtype = bob::core::array::t_uint8;
+  info.dtype = bob::io::base::array::t_uint8;
   info.nd = 3;
   info.shape[0] = 3;
   info.shape[1] = in_file->SHeight;
@@ -326,9 +326,9 @@ static void im_peek(const std::string& path, bob::core::array::typeinfo& info)
   info.update_strides();
 }
 
-static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::core::array::interface& b)
+static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base::array::interface& b)
 {
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
   const size_t height0 = info.shape[1];
   const size_t width0 = info.shape[2];
   const size_t frame_size = height0*width0;
@@ -432,14 +432,14 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::core::arr
   }
 }
 
-static void im_load(const std::string& filename, bob::core::array::interface& b)
+static void im_load(const std::string& filename, bob::io::base::array::interface& b)
 {
   // 1. GIF file opening
   boost::shared_ptr<GifFileType> in_file = make_dfile(filename.c_str());
 
   // 2. Read content
-  const bob::core::array::typeinfo& info = b.type();
-  if(info.dtype == bob::core::array::t_uint8) {
+  const bob::io::base::array::typeinfo& info = b.type();
+  if(info.dtype == bob::io::base::array::t_uint8) {
     if( info.nd == 3) im_load_color(in_file, b);
     else {
       boost::format m("GIF: cannot read object of type `%s' from file `%s'");
@@ -457,9 +457,9 @@ static void im_load(const std::string& filename, bob::core::array::interface& b)
 /**
  * SAVING
  */
-static void im_save_color(const bob::core::array::interface& b, boost::shared_ptr<GifFileType> out_file)
+static void im_save_color(const bob::io::base::array::interface& b, boost::shared_ptr<GifFileType> out_file)
 {
-  const bob::core::array::typeinfo& info = b.type();
+  const bob::io::base::array::typeinfo& info = b.type();
   const int height = info.shape[1];
   const int width = info.shape[2];
   const size_t frame_size = height * width;
@@ -516,16 +516,16 @@ static void im_save_color(const bob::core::array::interface& b, boost::shared_pt
 #endif
 }
 
-static void im_save(const std::string& filename, const bob::core::array::interface& array)
+static void im_save(const std::string& filename, const bob::io::base::array::interface& array)
 {
   // 1. GIF file opening
   boost::shared_ptr<GifFileType> out_file = make_efile(filename.c_str());
 
   // 2. Set the image information here:
-  const bob::core::array::typeinfo& info = array.type();
+  const bob::io::base::array::typeinfo& info = array.type();
 
   // 3. Writes content
-  if(info.dtype == bob::core::array::t_uint8) {
+  if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 3) {
       if(info.shape[0] != 3)
         throw std::runtime_error("color image does not have 3 planes on 1st. dimension");
@@ -545,7 +545,7 @@ static void im_save(const std::string& filename, const bob::core::array::interfa
 }
 
 
-class ImageGifFile: public bob::io::File {
+class ImageGifFile: public bob::io::base::File {
 
   public: //api
 
@@ -580,11 +580,11 @@ class ImageGifFile: public bob::io::File {
       return m_filename.c_str();
     }
 
-    virtual const bob::core::array::typeinfo& type_all() const {
+    virtual const bob::io::base::array::typeinfo& type_all() const {
       return m_type;
     }
 
-    virtual const bob::core::array::typeinfo& type() const {
+    virtual const bob::io::base::array::typeinfo& type() const {
       return m_type;
     }
 
@@ -596,11 +596,11 @@ class ImageGifFile: public bob::io::File {
       return s_codecname.c_str();
     }
 
-    virtual void read_all(bob::core::array::interface& buffer) {
+    virtual void read_all(bob::io::base::array::interface& buffer) {
       read(buffer, 0); ///we only have 1 image in an image file anyways
     }
 
-    virtual void read(bob::core::array::interface& buffer, size_t index) {
+    virtual void read(bob::io::base::array::interface& buffer, size_t index) {
       if (m_newfile)
         throw std::runtime_error("uninitialized image file cannot be read");
 
@@ -613,7 +613,7 @@ class ImageGifFile: public bob::io::File {
       im_load(m_filename, buffer);
     }
 
-    virtual size_t append (const bob::core::array::interface& buffer) {
+    virtual size_t append (const bob::io::base::array::interface& buffer) {
       if (m_newfile) {
         im_save(m_filename, buffer);
         m_type = buffer.type();
@@ -625,7 +625,7 @@ class ImageGifFile: public bob::io::File {
       throw std::runtime_error("image files only accept a single array");
     }
 
-    virtual void write (const bob::core::array::interface& buffer) {
+    virtual void write (const bob::io::base::array::interface& buffer) {
       //overwriting position 0 should always work
       if (m_newfile) {
         append(buffer);
@@ -638,7 +638,7 @@ class ImageGifFile: public bob::io::File {
   private: //representation
     std::string m_filename;
     bool m_newfile;
-    bob::core::array::typeinfo m_type;
+    bob::io::base::array::typeinfo m_type;
     size_t m_length;
 
     static std::string s_codecname;
@@ -648,6 +648,6 @@ class ImageGifFile: public bob::io::File {
 
 std::string ImageGifFile::s_codecname = "bob.image_gif";
 
-boost::shared_ptr<bob::io::File> make_gif_file (const char* path, char mode) {
+boost::shared_ptr<bob::io::base::File> make_gif_file (const char* path, char mode) {
   return boost::make_shared<ImageGifFile>(path, mode);
 }
