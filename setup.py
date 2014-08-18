@@ -3,9 +3,11 @@
 # Andre Anjos <andre.anjos@idiap.ch>
 # Mon 16 Apr 08:18:08 2012 CEST
 
+bob_packages = ['bob.core', 'bob.io.base']
+
 import os
 from setuptools import setup, find_packages, dist
-dist.Distribution(dict(setup_requires=['bob.blitz', 'bob.core', 'bob.io.base']))
+dist.Distribution(dict(setup_requires=['bob.blitz'] + bob_packages))
 from bob.extension.utils import egrep, find_header, find_library
 from bob.blitz.extension import Extension
 
@@ -377,11 +379,11 @@ tiff_pkg = tiff()
 gif_pkg = gif()
 netpbm_pkg = netpbm()
 
-extra_compile_args = [
-    '-isystem', jpeg_pkg.include_directory,
-    '-isystem', tiff_pkg.include_directory,
-    '-isystem', gif_pkg.include_directory,
-    '-isystem', netpbm_pkg.include_directory,
+system_include_dirs = [
+    jpeg_pkg.include_directory,
+    tiff_pkg.include_directory,
+    gif_pkg.include_directory,
+    netpbm_pkg.include_directory,
     ]
 
 library_dirs = [
@@ -437,9 +439,9 @@ setup(
           ],
         packages = packages,
         boost_modules = ['system'],
-        bob_packages = ['bob.core', 'bob.io.base'],
+        bob_packages = bob_packages,
         version = version,
-        extra_compile_args = extra_compile_args,
+        system_include_dirs = system_include_dirs,
         library_dirs = library_dirs,
         libraries = libraries,
         define_macros = define_macros,
@@ -456,9 +458,9 @@ setup(
           ],
         packages = packages,
         boost_modules = ['filesystem'],
-        bob_packages = ['bob.core', 'bob.io.base'],
+        bob_packages = bob_packages,
         version = version,
-        extra_compile_args = extra_compile_args,
+        system_include_dirs = system_include_dirs,
         library_dirs = library_dirs,
         libraries = libraries,
         define_macros = define_macros,

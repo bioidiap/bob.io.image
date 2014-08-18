@@ -18,6 +18,7 @@
 #include <boost/version.hpp>
 #include <boost/format.hpp>
 #include <bob.core/config.h>
+#include <bob.io.base/config.h>
 
 extern "C" {
 
@@ -107,13 +108,6 @@ static PyObject* giflib_version() {
 }
 
 /**
- * bob.core c/c++ api version
- */
-static PyObject* bob_core_version() {
-  return Py_BuildValue("{ss}", "api", BOOST_PP_STRINGIZE(BOB_CORE_API_VERSION));
-}
-
-/**
  * Describes the version of Boost libraries installed
  */
 static PyObject* boost_version() {
@@ -170,6 +164,13 @@ static PyObject* bob_blitz_version() {
 }
 
 /**
+ * bob.core c/c++ api version
+ */
+static PyObject* bob_core_version() {
+  return Py_BuildValue("{ss}", "api", BOOST_PP_STRINGIZE(BOB_CORE_API_VERSION));
+}
+
+/**
  * bob.io.base c/c++ api version
  */
 static PyObject* bob_io_base_version() {
@@ -194,6 +195,7 @@ static PyObject* build_version_dictionary() {
   if (!dict_steal(retval, "NumPy", numpy_version())) return 0;
   if (!dict_set(retval, "Blitz++", BZ_VERSION)) return 0;
   if (!dict_steal(retval, "bob.blitz", bob_blitz_version())) return 0;
+  if (!dict_steal(retval, "bob.core", bob_core_version())) return 0;
   if (!dict_steal(retval, "bob.io.base", bob_io_base_version())) return 0;
 
   Py_INCREF(retval);
