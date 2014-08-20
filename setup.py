@@ -12,6 +12,8 @@ from bob.extension.utils import egrep, find_header, find_library
 from bob.blitz.extension import Extension
 
 packages = ['boost', 'libpng']
+boost_modules = ['system']
+
 version = '2.0.0a0'
 
 def libjpeg_version(header):
@@ -430,13 +432,13 @@ setup(
     namespace_packages=[
       "bob",
       "bob.io",
-      ],
+    ],
 
     ext_modules = [
       Extension("bob.io.image.version",
         [
           "bob/io/image/version.cpp",
-          ],
+        ],
         packages = packages,
         boost_modules = ['system'],
         bob_packages = bob_packages,
@@ -445,7 +447,8 @@ setup(
         library_dirs = library_dirs,
         libraries = libraries,
         define_macros = define_macros,
-        ),
+      ),
+
       Extension("bob.io.image._library",
         [
           "bob/io/image/tiff.cpp",
@@ -455,7 +458,7 @@ setup(
           "bob/io/image/bmp.cpp",
           "bob/io/image/netpbm.cpp",
           "bob/io/image/main.cpp",
-          ],
+        ],
         packages = packages,
         boost_modules = ['filesystem'],
         bob_packages = bob_packages,
@@ -464,8 +467,8 @@ setup(
         library_dirs = library_dirs,
         libraries = libraries,
         define_macros = define_macros,
-        ),
-      ],
+      ),
+    ],
 
     classifiers = [
       'Development Status :: 3 - Alpha',
@@ -476,6 +479,6 @@ setup(
       'Programming Language :: Python :: 3',
       'Topic :: Software Development :: Libraries :: Python Modules',
       'Environment :: Plugins',
-      ],
+    ],
 
-    )
+  )

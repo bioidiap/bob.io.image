@@ -1,3 +1,6 @@
+# import Libraries of other lib packages
+import bob.io.base
+
 from . import _library
 from . import version
 from .version import module as __version__
