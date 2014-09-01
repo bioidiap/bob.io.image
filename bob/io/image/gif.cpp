@@ -277,6 +277,15 @@ QuantizeBuffer(unsigned int Width, unsigned int Height, int *ColorMapSize,
 #endif // End of ugly QuantizeBuffer definition for giflib 4.2
 
 
+static int DGifDeleter(GifFileType* ptr){
+#if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5) || (GIFLIB_MAJOR == 5) && (GIFLIB_MINOR < 1)
+  return DGifCloseFile(ptr);
+#else
+  int error;
+  return DGifCloseFile(ptr, &error);
+#endif
+}
+
 static boost::shared_ptr<GifFileType> make_dfile(const char *filename)
 {
 #if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5)
@@ -290,7 +299,17 @@ static boost::shared_ptr<GifFileType> make_dfile(const char *filename)
     m % filename;
     throw std::runtime_error(m.str());
   }
-  return boost::shared_ptr<GifFileType>(fp, DGifCloseFile);
+  return boost::shared_ptr<GifFileType>(fp, DGifDeleter);
+}
+
+
+static int EGifDeleter(GifFileType* ptr){
+#if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5) || (GIFLIB_MAJOR == 5) && (GIFLIB_MINOR < 1)
+  return EGifCloseFile(ptr);
+#else
+  int error;
+  return EGifCloseFile(ptr, &error);
+#endif
 }
 
 static boost::shared_ptr<GifFileType> make_efile(const char *filename)
@@ -306,7 +325,7 @@ static boost::shared_ptr<GifFileType> make_efile(const char *filename)
     m % filename;
     throw std::runtime_error(m.str());
   }
-  return boost::shared_ptr<GifFileType>(fp, EGifCloseFile);
+  return boost::shared_ptr<GifFileType>(fp, EGifDeleter);
 }
 
 /**
