@@ -9,7 +9,7 @@ import os
 from setuptools import setup, find_packages, dist
 dist.Distribution(dict(setup_requires=['bob.blitz'] + bob_packages))
 from bob.extension.utils import egrep, find_header, find_library
-from bob.blitz.extension import Extension
+from bob.blitz.extension import Extension, build_ext
 
 packages = ['boost', 'libpng']
 boost_modules = ['system']
@@ -469,6 +469,10 @@ setup(
         define_macros = define_macros,
       ),
     ],
+
+    cmdclass = {
+      'build_ext': build_ext
+    },
 
     classifiers = [
       'Development Status :: 3 - Alpha',
