@@ -79,6 +79,9 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
 
   if( cinfo.output_components != 1 && cinfo.output_components != 3)
   {
+    // 6. clean up
+    jpeg_destroy_decompress(&cinfo);
+
     boost::format m("unsupported number of planes (%d) when reading file. Image depth must be 1 or 3.");
     m % cinfo.output_components;
     throw std::runtime_error(m.str());
@@ -100,6 +103,8 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
   }
   info.update_strides();
 
+  // 6. clean up
+  jpeg_destroy_decompress(&cinfo);
 }
 
 template <typename T> static
