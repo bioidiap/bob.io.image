@@ -7,9 +7,12 @@ bob_packages = ['bob.core', 'bob.io.base']
 
 import os
 from setuptools import setup, find_packages, dist
-dist.Distribution(dict(setup_requires=['bob.blitz'] + bob_packages))
+dist.Distribution(dict(setup_requires=['bob.extension', 'bob.blitz'] + bob_packages))
 from bob.extension.utils import egrep, find_header, find_library
 from bob.blitz.extension import Extension, build_ext
+
+from bob.extension.utils import load_requirements
+build_requires = load_requirements()
 
 packages = ['boost', 'libpng']
 boost_modules = ['system']
@@ -423,11 +426,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
 
-    install_requires=[
-      'setuptools',
-      'bob.blitz',
-      'bob.io.base',
-    ],
+    setup_requires = build_requires,
+    install_requires = build_requires,
 
     namespace_packages=[
       "bob",
