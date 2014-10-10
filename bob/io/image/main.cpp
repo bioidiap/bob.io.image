@@ -108,7 +108,7 @@ static PyObject* create_module (void) {
     PyErr_Print();
   }
 
-  if (!PyBobIoCodec_Register(".bmp", "BMP, (built-in codec)", &make_png_file)) {
+  if (!PyBobIoCodec_Register(".bmp", "BMP, (built-in codec)", &make_bmp_file)) {
     PyErr_Print();
   }
 
