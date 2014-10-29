@@ -22,7 +22,7 @@
 ===========================
 
 This packages contains an interface for image IO.
-By importing this package, you activate a transparent plugin that makes possible reading and writing to image files using :py:mod:`bob.io.base` functionalities.
+By importing this package, you activate a transparent plugin that makes possible reading and writing to image files using ``bob.io.base`` functionalities.
 
 
 Installation
