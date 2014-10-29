@@ -4,9 +4,9 @@
 ..
 .. Copyright (C) 2011-2014 Idiap Research Institute, Martigny, Switzerland
 
-=========================
- Bob's Core I/O Routines
-=========================
+===============================================
+ Bob's I/O Routines for Images of Various type
+===============================================
 
 .. todolist::
 
