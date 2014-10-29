@@ -19,7 +19,7 @@
 ============
 
 By importing this package, you can use |project| native array reading and
-writing routines to load and save files using various image formats.
+writing routines to load and save files using various image formats, using the simple plug-in technology for :py:mod:`bob.io.base`, i.e., :py:func:`bob.io.base.load` and :py:func:`bob.io.base.save`.
 
 .. code-block:: python
 
@@ -28,14 +28,15 @@ writing routines to load and save files using various image formats.
    >> x = bob.io.base.load('myfile.jpg')
 
 In the following example, an image generated randomly using the method `NumPy`
-:py:meth:`numpy.random.random_integers`, is saved in JPEG format. The image
+:py:func:`numpy.random.random_integers`, is saved in lossless PNG format. The image
 must be of type ``uint8`` or ``uint16``:
 
 .. doctest::
 
   >>> my_image = numpy.random.random_integers(0,255,(3,256,256))
-  >>> bob.io.base.save(my_image.astype('uint8'), 'testimage.jpg') # saving the image in jpeg format
-  >>> my_image_copy = bob.io.base.load('testimage.jpg')
+  >>> bob.io.base.save(my_image.astype('uint8'), 'testimage.png') # saving the image in png format
+  >>> my_image_copy = bob.io.base.load('testimage.png')
+  >>> assert (my_image_copy == my_image).all()
 
 The loaded image files can be 3D arrays (for RGB format) or 2D arrays (for
 greyscale) of type ``uint8`` or ``uint16``.
