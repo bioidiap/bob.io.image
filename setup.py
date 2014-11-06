@@ -14,26 +14,28 @@ from bob.blitz.extension import Extension, build_ext
 from bob.extension.utils import load_requirements
 build_requires = load_requirements()
 
+# Define package version
+version = open("version.txt").read().rstrip()
+
 packages = ['boost', 'libpng']
 boost_modules = ['system']
 
-version = '2.0.0a0'
 
 def libjpeg_version(header):
 
-  version = egrep(header, r"#\s*define\s+JPEG_LIB_VERSION_(MINOR|MAJOR)\s+(\d+)")
-  if not len(version): return None
+  vv = egrep(header, r"#\s*define\s+JPEG_LIB_VERSION_(MINOR|MAJOR)\s+(\d+)")
+  if not len(vv): return None
 
   # we have a match, produce a string version of the version number
-  major = int(version[0].group(2))
-  minor = int(version[1].group(2))
+  major = int(vv[0].group(2))
+  minor = int(vv[1].group(2))
   return '%d.%d' % (major, minor)
 
 def libjpeg_turbo_version(header):
 
-  version = egrep(header, r"#\s*define\s+LIBJPEG_TURBO_VERSION\s+([\d\.]+)")
-  if not len(version): return None
-  return version[0].group(1) + ' (turbo)'
+  vv = egrep(header, r"#\s*define\s+LIBJPEG_TURBO_VERSION\s+([\d\.]+)")
+  if not len(vv): return None
+  return vv[0].group(1) + ' (turbo)'
 
 class jpeg:
 
@@ -85,15 +87,15 @@ class jpeg:
 
       # now check for user requirements
       for candidate in candidates:
-        version = libjpeg_version(candidate)
-        available = LooseVersion(version)
+        vv = libjpeg_version(candidate)
+        available = LooseVersion(vv)
         if (operator == '<' and available < required) or \
            (operator == '<=' and available <= required) or \
            (operator == '>' and available > required) or \
            (operator == '>=' and available >= required) or \
            (operator == '==' and available == required):
           self.include_directory = os.path.dirname(candidate)
-          self.version = version
+          self.version = vv
           found = True
           break
 
@@ -130,9 +132,9 @@ class jpeg:
 
 def libtiff_version(header):
 
-  version = egrep(header, r"#\s*define\s+TIFFLIB_VERSION_STR\s+\"LIBTIFF,\s+Version\s+([\d\.]+).*")
-  if not len(version): return None
-  return version[0].group(1)
+  vv = egrep(header, r"#\s*define\s+TIFFLIB_VERSION_STR\s+\"LIBTIFF,\s+Version\s+([\d\.]+).*")
+  if not len(vv): return None
+  return vv[0].group(1)
 
 class tiff:
 
@@ -181,15 +183,15 @@ class tiff:
       for candidate in candidates:
         directory = os.path.dirname(candidate)
         version_header = os.path.join(directory, 'tiffvers.h')
-        version = libtiff_version(version_header)
-        available = LooseVersion(version)
+        vv = libtiff_version(version_header)
+        available = LooseVersion(vv)
         if (operator == '<' and available < required) or \
            (operator == '<=' and available <= required) or \
            (operator == '>' and available > required) or \
            (operator == '>=' and available >= required) or \
            (operator == '==' and available == required):
           self.include_directory = os.path.dirname(candidate)
-          self.version = version
+          self.version = vv
           found = True
           break
 
@@ -226,18 +228,18 @@ class tiff:
 
 def libgif_version(header):
 
-  version = egrep(header, r"#\s*define\s+GIFLIB_(RELEASE|MINOR|MAJOR)\s+(\d+)")
-  if not len(version):
-    version = egrep(header, r"#\s*define\s+GIF_LIB_VERSION\s+\"\s*Version\s+([\d\.]+).*\"")
-    if not len(version): return None
+  vv = egrep(header, r"#\s*define\s+GIFLIB_(RELEASE|MINOR|MAJOR)\s+(\d+)")
+  if not len(vv):
+    vv = egrep(header, r"#\s*define\s+GIF_LIB_VERSION\s+\"\s*Version\s+([\d\.]+).*\"")
+    if not len(vv): return None
 
     # old style
-    return version[0].group(1)
+    return vv[0].group(1)
 
   # we have a match, produce a string version of the version number
-  major = int(version[0].group(2))
-  minor = int(version[1].group(2))
-  release = int(version[2].group(2))
+  major = int(vv[0].group(2))
+  minor = int(vv[1].group(2))
+  release = int(vv[2].group(2))
   return '%d.%d.%d' % (major, minor, release)
 
 class gif:
@@ -283,15 +285,15 @@ class gif:
 
       # now check for user requirements
       for candidate in candidates:
-        version = libgif_version(candidate)
-        available = LooseVersion(version)
+        vv = libgif_version(candidate)
+        available = LooseVersion(vv)
         if (operator == '<' and available < required) or \
            (operator == '<=' and available <= required) or \
            (operator == '>' and available > required) or \
            (operator == '>=' and available >= required) or \
            (operator == '==' and available == required):
           self.include_directory = os.path.dirname(candidate)
-          self.version = version
+          self.version = vv
           found = True
           break
 
