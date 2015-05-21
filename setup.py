@@ -18,7 +18,7 @@ build_requires = load_requirements()
 version = open("version.txt").read().rstrip()
 
 packages = ['boost', 'libpng']
-boost_modules = ['system']
+boost_modules = ['system', 'filesystem']
 
 
 def libjpeg_version(header):
@@ -412,6 +412,7 @@ define_macros = \
     gif_pkg.macros() + \
     netpbm_pkg.macros()
 
+
 setup(
 
     name='bob.io.image',
@@ -442,10 +443,10 @@ setup(
           "bob/io/image/version.cpp",
         ],
         packages = packages,
-        boost_modules = ['system'],
+        boost_modules = boost_modules,
         bob_packages = bob_packages,
         version = version,
-        system_include_dirs = system_include_dirs,
+        system_include_dirs = system_include_dirs + ['bob/io/image/include'],
         library_dirs = library_dirs,
         libraries = libraries,
         define_macros = define_macros,
@@ -462,7 +463,7 @@ setup(
           "bob/io/image/main.cpp",
         ],
         packages = packages,
-        boost_modules = ['filesystem'],
+        boost_modules = boost_modules,
         bob_packages = bob_packages,
         version = version,
         system_include_dirs = system_include_dirs,
@@ -488,4 +489,4 @@ setup(
       'Environment :: Plugins',
     ],
 
-  )
+)
