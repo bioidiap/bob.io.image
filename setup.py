@@ -446,7 +446,7 @@ setup(
         boost_modules = boost_modules,
         bob_packages = bob_packages,
         version = version,
-        system_include_dirs = system_include_dirs + ['bob/io/image/include'],
+        system_include_dirs = system_include_dirs,
         library_dirs = library_dirs,
         libraries = libraries,
         define_macros = define_macros,
