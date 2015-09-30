@@ -425,7 +425,7 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
     else
     {
       png_destroy_write_struct(&png_ptr, &info_ptr);
-      boost::format m("the image in file `%s' has a number of dimensions for which this jpeg codec has no support for: %s");
+      boost::format m("the image in file `%s' has a number of dimensions for which this png codec has no support for: %s");
       m % filename % info.str();
       throw std::runtime_error(m.str());
     }
@@ -443,14 +443,14 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
     else
     {
       png_destroy_write_struct(&png_ptr, &info_ptr);
-      boost::format m("the image in file `%s' has a number of dimensions for which this jpeg codec has no support for: %s");
+      boost::format m("the image in file `%s' has a number of dimensions for which this png codec has no support for: %s");
       m % filename % info.str();
       throw std::runtime_error(m.str());
     }
   }
   else {
     png_destroy_write_struct(&png_ptr, &info_ptr);
-    boost::format m("the image in file `%s' has a data type this jpeg codec has no support for: %s");
+    boost::format m("the image in file `%s' has a data type this png codec has no support for: %s");
     m % filename % info.str();
     throw std::runtime_error(m.str());
   }

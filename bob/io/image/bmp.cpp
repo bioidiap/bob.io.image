@@ -924,7 +924,7 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
     }
   }
   else {
-    boost::format m("the image in file `%s' has a data type this jpeg codec has no support for: %s");
+    boost::format m("the image in file `%s' has a data type this bmp codec has no support for: %s");
     m % info.str();
     throw std::runtime_error(m.str());
   }
