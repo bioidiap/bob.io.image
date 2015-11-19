@@ -103,12 +103,16 @@ void im_load_gray(boost::shared_ptr<TIFF> in_file, bob::io::base::array::interfa
     image_offset += result;
   }
 
+  //Comment just to document
+  //PHOTOMETRIC_PALETTE: In this model, a color is described with a single component. The value of the component is used as an index into the red, green and blue curves in the ColorMap field to retrieve an RGB triplet that defines the color. When PhotometricInterpretation=3
+  
   // Deal with photometric interpretations
   uint16 photo = PHOTOMETRIC_MINISBLACK;
-  if(TIFFGetField(in_file.get(), TIFFTAG_PHOTOMETRIC, &photo) == 0 || (photo != PHOTOMETRIC_MINISBLACK && photo != PHOTOMETRIC_MINISWHITE))
+  if(TIFFGetField(in_file.get(), TIFFTAG_PHOTOMETRIC, &photo) == 0 || (photo != PHOTOMETRIC_MINISBLACK && photo != PHOTOMETRIC_MINISWHITE && photo != PHOTOMETRIC_PALETTE)){
     throw std::runtime_error("TIFF: error in function TIFFGetField()");
+  }
 
-  if(photo != PHOTOMETRIC_MINISBLACK)
+  if(photo == PHOTOMETRIC_MINISWHITE)
   {
     // Flip bits
     for(unsigned long count=0; count<buffer_size; ++count)
