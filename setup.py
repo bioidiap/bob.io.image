@@ -432,10 +432,7 @@ setup(
     setup_requires = build_requires,
     install_requires = build_requires,
 
-    namespace_packages=[
-      "bob",
-      "bob.io",
-    ],
+
 
     ext_modules = [
       Extension("bob.io.image.version",
