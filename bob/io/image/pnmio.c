@@ -95,8 +95,7 @@ int get_pnm_type(FILE *f)
   } else if (strcmp(magic, "Pf") == 0) {
     pnm_type = PFM_GREYSCALE;
   } else {
-    fprintf(stderr, "Error: Unknown PNM/PFM file; wrong magic number!\n");
-    exit(1);
+    pnm_type = -1;
   }
 
   return (pnm_type);
@@ -113,7 +112,7 @@ int get_pnm_type(FILE *f)
  * NOTE1: Comment lines start with '#'.
  * NOTE2: < > denote integer values (in decimal).
  */
-void read_pbm_header(FILE *f, int *img_xdim, int *img_ydim, int *is_ascii)
+int read_pbm_header(FILE *f, int *img_xdim, int *img_ydim, int *is_ascii)
 {
   int flag=0;
   int x_val, y_val;
@@ -151,14 +150,16 @@ void read_pbm_header(FILE *f, int *img_xdim, int *img_ydim, int *is_ascii)
   } else if (strcmp(magic, "P4") == 0) {
     *is_ascii = 0;
   } else {
-    fprintf(stderr, "Error: Input file not in PBM format!\n");
-    exit(1);
+    return -1;
+    // fprintf(stderr, "Error: Input file not in PBM format!\n");
+    // exit(1);
   }
 
   // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d\n",
   //   magic, x_val, y_val);
   *img_xdim   = x_val;
   *img_ydim   = y_val;
+  return 0;
 }
 
 /* read_pgm_header:
@@ -173,7 +174,7 @@ void read_pbm_header(FILE *f, int *img_xdim, int *img_ydim, int *is_ascii)
  * NOTE1: Comment lines start with '#'.
  * NOTE2: < > denote integer values (in decimal).
  */
-void read_pgm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int *is_ascii)
+int read_pgm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int *is_ascii)
 {
   int flag=0;
   int x_val, y_val, maxcolors_val;
@@ -213,8 +214,9 @@ void read_pgm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int
   } else if (strcmp(magic, "P5") == 0) {
     *is_ascii = 0;
   } else {
-    fprintf(stderr, "Error: Input file not in PGM format!\n");
-    exit(1);
+    return -1;
+    // fprintf(stderr, "Error: Input file not in PGM format!\n");
+    // exit(1);
   }
 
   // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, maxcolors_val=%d\n",
@@ -222,6 +224,7 @@ void read_pgm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int
   *img_xdim   = x_val;
   *img_ydim   = y_val;
   *img_colors = maxcolors_val;
+  return 0;
 }
 
 /* read_ppm_header:
@@ -236,7 +239,7 @@ void read_pgm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int
  * NOTE1: Comment lines start with '#'.
  # NOTE2: < > denote integer values (in decimal).
  */
-void read_ppm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int *is_ascii)
+int read_ppm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int *is_ascii)
 {
   int flag=0;
   int x_val, y_val, maxcolors_val;
@@ -276,8 +279,9 @@ void read_ppm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int
   } else if (strcmp(magic, "P6") == 0) {
     *is_ascii = 0;
   } else {
-    fprintf(stderr, "Error: Input file not in PPM format!\n");
-    exit(1);
+    return -1;
+    // fprintf(stderr, "Error: Input file not in PPM format!\n");
+    // exit(1);
   }
 
   // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, maxcolors_val=%d\n",
@@ -285,119 +289,33 @@ void read_ppm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int
   *img_xdim   = x_val;
   *img_ydim   = y_val;
   *img_colors = maxcolors_val;
-}
-
-/* read_pfm_header:
- * Read the header contents of a PFM (portable float map) file.
- * A PFM image file follows the format:
- * [PF|Pf]
- * <X> <Y>
- * (endianess)
- * {R1}{G1}{B1} ... {RMAX}{GMAX}{BMAX}
- * NOTE1: Comment lines, if allowed, start with '#'.
- # NOTE2: < > denote integer values (in decimal).
- # NOTE3: ( ) denote floating-point values (in decimal).
- # NOTE4: { } denote floating-point values (coded in binary).
- */
-void read_pfm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_type, int *endianess)
-{
-  /* Union definition for extracting s|m|e of a float. */
-  typedef union {
-    float f;
-    struct {
-      unsigned int m : 23; /* mantissa */
-      unsigned int e :  8; /* exponent */
-      unsigned int s :  1; /* sign     */
-    } field;
-  } float_type;
-  int flag=0;
-  int x_val, y_val;
-  unsigned int i;
-  int is_rgb=0, is_greyscale=0;
-  float_type aspect_ratio;
-  char magic[MAXLINE];
-  char line[MAXLINE];
-  int count=0;
-
-  /* Read the PFM file header. */
-  while (fgets(line, MAXLINE, f) != NULL) {
-    flag = 0;
-    for (i = 0; i < strlen(line); i++) {
-      if (isgraph(line[i]) && (flag == 0)) {
-        if ((line[i] == '#') && (flag == 0)) {
-          flag = 1;
-        }
-      }
-    }
-    if (flag == 0) {
-      if (count == 0) {
-        count += sscanf(line, "%s %d %d %f", magic, &x_val, &y_val, &aspect_ratio.f);
-      } else if (count == 1) {
-        count += sscanf(line, "%d %d %f", &x_val, &y_val, &aspect_ratio.f);
-      } else if (count == 2) {
-        count += sscanf(line, "%d %f", &y_val, &aspect_ratio.f);
-      } else if (count == 3) {
-        count += sscanf(line, "%f", &aspect_ratio.f);
-      }
-    }
-    if (count == 4) {
-      break;
-    }
-  }
-
-  if (strcmp(magic, "PF") == 0) {
-    is_rgb       = 1;
-    is_greyscale = 0;
-  } else if (strcmp(magic, "Pf") == 0) {
-    is_greyscale = 0;
-    is_rgb       = 1;
-  } else {
-    fprintf(stderr, "Error: Input file not in PFM format!\n");
-    exit(1);
-  }
-
-  // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, aspect_ratio.f=%f\n",
-  //   magic, x_val, y_val, aspect_ratio.f);
-
-  /* FIXME: Aspect ratio different to 1.0 is not yet supported. */
-  if (!floatEqualComparison(aspect_ratio.f, -1.0, 1E-06) &&
-      !floatEqualComparison(aspect_ratio.f, 1.0, 1E-06)) {
-    fprintf(stderr, "Error: Aspect ratio different to -1.0 or +1.0 is unsupported!\n");
-    exit(1);
-  }
-
-  *img_xdim   = x_val;
-  *img_ydim   = y_val;
-  *img_type   = is_rgb & ~is_greyscale;
-  if (aspect_ratio.f > 0.0) {
-    *endianess = 1;
-  } else {
-    *endianess = -1;
-  }
+  return 0;
 }
 
 /* read_pbm_data:
  * Read the data contents of a PBM (portable bit map) file.
  */
-void read_pbm_data(FILE *f, int *img_in, int img_size, int is_ascii, int img_width)
+int read_pbm_data(FILE *f, int *img_in, int img_size, int is_ascii, int img_width)
 {
   int i=0, c;
   int lum_val;
   int k;
   int row_position = 0;
+  int read_count;
 
   /* Read the rest of the PPM file. */
   while ((c = fgetc(f)) != EOF) {
     ungetc(c, f);
     if (is_ascii == 1) {
-      fscanf(f, "%d", &lum_val);
-      if (i >= img_size) return;
+      read_count = fscanf(f, "%d", &lum_val);
+      if (read_count < 1) return -1;
+      if (i >= img_size) return -1;
       img_in[i++] = lum_val;
     } else {
       lum_val = fgetc(f);
       /* Decode the image contents byte-by-byte. */
       for (k = 0; k < 8; k++) {
-        if (i >= img_size) return;
+        if (i >= img_size) return -1;
         img_in[i++] = (lum_val >> (7-k)) & 0x1;        
         // fprintf(stderr, "i: %d, %d\n", i, img_in[i]);
         row_position++;
@@ -409,23 +327,25 @@ void read_pbm_data(FILE *f, int *img_in, int img_size, int is_ascii, int img_wid
     }
   }
   // fclose(f);
+  return 0;
 }
 
 /* read_pgm_data:
  * Read the data contents of a PGM (portable grey map) file.
  */
-void read_pgm_data(FILE *f, int *img_in, int img_size, int is_ascii,
+int read_pgm_data(FILE *f, int *img_in, int img_size, int is_ascii,
   unsigned int bytes_per_sample)
 {
   int i=0, c;
   int lum_val;
-  // int k;
+  int read_count;
 
   /* Read the rest of the PPM file. */
   while ((c = fgetc(f)) != EOF) {
     ungetc(c, f);
     if (is_ascii == 1) {
-	    fscanf(f, "%d", &lum_val);
+	    read_count = fscanf(f, "%d", &lum_val);
+      if (read_count < 1) return -1;
 	  } else {
       if (bytes_per_sample == 1) {
         lum_val = fgetc(f);
@@ -435,26 +355,29 @@ void read_pgm_data(FILE *f, int *img_in, int img_size, int is_ascii,
         lum_val |= fgetc(f);
       }
     }
-    if (i >= img_size) return;
+    if (i >= img_size) return -1;
     img_in[i++] = lum_val;
   }
   // fclose(f);
+  return 0;
 }
 
 /* read_ppm_data:
  * Read the data contents of a PPM (portable pix map) file.
  */
-void read_ppm_data(FILE *f, int *img_in, int img_size, int is_ascii,
+int read_ppm_data(FILE *f, int *img_in, int img_size, int is_ascii,
   unsigned int bytes_per_sample)
 {
   int i=0, c;
   int r_val, g_val, b_val;
+  int read_count;
 
   /* Read the rest of the PPM file. */
   while ((c = fgetc(f)) != EOF) {
     ungetc(c, f);
     if (is_ascii == 1) {
-      fscanf(f, "%d %d %d", &r_val, &g_val, &b_val);
+      read_count = fscanf(f, "%d %d %d", &r_val, &g_val, &b_val);
+      if (read_count < 3) return -1;
     } else {
       if (bytes_per_sample == 1) {
         r_val = fgetc(f);
@@ -474,46 +397,19 @@ void read_ppm_data(FILE *f, int *img_in, int img_size, int is_ascii,
         b_val |= fgetc(f);
       }
     }
-    if (i >= img_size) return;
+    if (i >= img_size) return -1;
     img_in[i++] = r_val;
     img_in[i++] = g_val;
     img_in[i++] = b_val;
   }
   // fclose(f);
-}
-
-/* read_pfm_data:
- * Read the data contents of a PFM (portable float map) file.
- */
-void read_pfm_data(FILE *f, float *img_in, int img_type, int endianess)
-{
-  int i=0, c;
-  int swap = (endianess == 1) ? 0 : 1;
-  float r_val, g_val, b_val;
-
-  /* Read the rest of the PPM file. */
-  while ((c = fgetc(f)) != EOF) {
-    ungetc(c, f);
-    /* Read a possibly byte-swapped float. */
-    if (img_type == RGB_TYPE) {
-      ReadFloat(f, &r_val, swap);
-      ReadFloat(f, &g_val, swap);
-      ReadFloat(f, &b_val, swap);
-      img_in[i++] = r_val;
-      img_in[i++] = g_val;
-      img_in[i++] = b_val;
-    } else if (img_type == GREYSCALE_TYPE) {
-      ReadFloat(f, &g_val, swap);
-      img_in[i++] = g_val;
-    }
-  }
-  // fclose(f);
+  return 0;
 }
 
 /* write_pbm_file:
  * Write the contents of a PBM (portable bit map) file.
  */
-void write_pbm_file(FILE *f, int *img_out,
+int write_pbm_file(FILE *f, int *img_out,
   int x_size, int y_size, int x_scale_val, int y_scale_val, int linevals,
   int is_ascii)
 {
@@ -560,12 +456,13 @@ void write_pbm_file(FILE *f, int *img_out,
     }
   }
   // fclose(f);
+  return 0;
 }
 
 /* write_pgm_file:
  * Write the contents of a PGM (portable grey map) file.
  */
-void write_pgm_file(FILE *f, int *img_out,
+int write_pgm_file(FILE *f, int *img_out,
   int x_size, int y_size, int x_scale_val, int y_scale_val,
   int img_colors, int linevals, int is_ascii,
   unsigned int bytes_per_sample)
@@ -606,12 +503,13 @@ void write_pgm_file(FILE *f, int *img_out,
     }
   }
   // fclose(f);
+  return 0;
 }
 
 /* write_ppm_file:
  * Write the contents of a PPM (portable pix map) file.
  */
-void write_ppm_file(FILE *f, int *img_out,
+int write_ppm_file(FILE *f, int *img_out,
   int x_size, int y_size, int x_scale_val, int y_scale_val,
   int img_colors, int is_ascii, unsigned int bytes_per_sample)
 {
@@ -663,146 +561,5 @@ void write_ppm_file(FILE *f, int *img_out,
     }
   }
   // fclose(f);
-}
-
-/* write_pfm_file:
- * Write the contents of a PFM (portable float map) file.
- */
-void write_pfm_file(FILE *f, float *img_out, char *img_out_fname,
-  int x_size, int y_size,
-  int img_type, int endianess)
-{
-  int i, j, x_scaled_size, y_scaled_size;
-  int swap = (endianess == 1) ? 0 : 1;
-  float fendian = (endianess == 1) ? +1.0 : -1.0;
-
-  x_scaled_size = x_size;
-  y_scaled_size = y_size;
-  /* Write the magic number string. */
-  if (img_type == RGB_TYPE) {
-    fprintf(f, "PF\n");
-  } else if (img_type == GREYSCALE_TYPE) {
-    fprintf(f, "Pf\n");
-  } else {
-    fprintf(stderr, "Error: Image type invalid for PFM format!\n");
-    exit(1);
-  }
-  /* Write the image dimensions. */
-  fprintf(f, "%d %d\n", x_scaled_size, y_scaled_size);
-  /* Write the endianess/scale factor as float. */
-  fprintf(f, "%f\n", fendian);
-
-  /* Write the image data. */
-  for (i = 0; i < y_scaled_size; i++) {
-    for (j = 0; j < x_scaled_size; j++) {
-      if (img_type == RGB_TYPE) {
-        WriteFloat(f, &img_out[3*(i*x_scaled_size+j)+0], swap);
-        WriteFloat(f, &img_out[3*(i*x_scaled_size+j)+1], swap);
-        WriteFloat(f, &img_out[3*(i*x_scaled_size+j)+2], swap);
-      } else if (img_type == GREYSCALE_TYPE) {
-        WriteFloat(f, &img_out[i*x_scaled_size+j], swap);
-      }
-    }
-  }
-  // fclose(f);
-}
-
-/* ReadFloat:
- * Read a possibly byte swapped floating-point number.
- * NOTE: Assume IEEE format.
- * Source: http://paulbourke.net/dataformats/pbmhdr/
- */
-int ReadFloat(FILE *fptr, float *f, int swap)
-{
-  unsigned char *cptr, tmp;
-
-  if (fread(f, sizeof(float), 1, fptr) != 1) {
-    return (FALSE);
-  }
-  if (swap) {
-    cptr    = (unsigned char *)f;
-    tmp     = cptr[0];
-    cptr[0] = cptr[3];
-    cptr[3] = tmp;
-    tmp     = cptr[1];
-    cptr[1] = cptr[2];
-    cptr[2] = tmp;
-  }
-  return (TRUE);
-}
-
-/* WriteFloat:
- * Write a possibly byte-swapped floating-point number.
- * NOTE: Assume IEEE format.
- */
-int WriteFloat(FILE *fptr, float *f, int swap)
-{
-  unsigned char *cptr, tmp;
-
-  if (swap) {
-    cptr    = (unsigned char*)f;
-    tmp     = cptr[0];
-    cptr[0] = cptr[3];
-    cptr[3] = tmp;
-    tmp     = cptr[1];
-    cptr[1] = cptr[2];
-    cptr[2] = tmp;
-  }
-  if (fwrite(f, sizeof(float), 1, fptr) != 1) {
-    return (FALSE);
-  }
-  return (TRUE);
-}
-
-/* floatEqualComparison:
- * Compare two floats and accept equality if not different than
- * maxRelDiff (a specified maximum relative difference).
- */
-int floatEqualComparison(float A, float B, float maxRelDiff)
-{
-  float largest, diff = fabs(A-B);
-  A = fabs(A);
-  B = fabs(B);
-  largest = (B > A) ? B : A;
-  if (diff <= largest * maxRelDiff) {
-    return 1;
-  }
   return 0;
-}
-
-/* frand48:
- * Emulate a floating-point PRNG.
- * Source: http://c-faq.com/lib/rand48.html
- */
-float frand(void)
-{
-  return rand() / (RAND_MAX + 1.0);
-}
-
-/* log2ceil:
- * Function to calculate the ceiling of the binary logarithm of a given positive
- * integer n.
- */
-int log2ceil(int inpval)
-{
-  int max = 1; // exp=0 => max=2^0=1
-  unsigned int logval = 0;
-
-  if (inpval < 0) {
-    fprintf(stderr, "Error: Result of log2 computation is NAN.\n");
-    exit(1);
-  } else if (inpval == 0) {
-    fprintf(stderr, "Error: Result of log2 computation is MINUS_INFINITY.\n");
-    exit(1);
-  } else {
-    // log computation loop
-    while (max < inpval) {
-      // increment exponent
-      logval = logval + 1;
-      //  max = 2^logval
-      max = max * 2;
-    }
-  }
-  // exponent that gives (2^logval) >= inpval
-  return (logval);
 }

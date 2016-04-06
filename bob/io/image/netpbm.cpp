@@ -95,11 +95,6 @@ pm_openr(const char * const name) {
 #else
         f = fopen (name, "r", "ctx=stm");
 #endif
-        if (f == NULL) {
-            fprintf(stderr, name);
-            // pm_perror(name);
-            exit(1);
-        }
     }
     return f;
 }
@@ -116,24 +111,22 @@ pm_openw(const char * const name) {
 #else
         f = fopen (name, "w", "mbc=32", "mbf=2");  /* set buffer factors */
 #endif
-        if (f == NULL) {
-            fprintf(stderr, name);
-            // pm_perror(name);
-            exit(1);
-        }
     }
     return f;
 }
 
 void
 pm_close(FILE * const f) {
-    // fprintf(stderr, "I am closing a file\n");
-    fflush( f );
-    if ( ferror( f ) )
-        fprintf(stderr, "a file read or write error occurred at some point" );
-    if ( f != stdin )
-        if ( fclose( f ) != 0 )
-            fprintf(stderr, "fclose");
+  // fprintf(stderr, "I am closing a file\n");
+  fflush( f );
+  // if ( ferror( f ) )
+    // boost::format m("a file read or write error occurred at some point");
+    // throw std::runtime_error(m.str());
+  if ( f != stdin )
+    fclose( f );
+  //   if ( fclose( f ) != 0 )
+      // boost::format m("cannot close file.");
+      // throw std::runtime_error(m.str());
 }
 
 static boost::shared_ptr<std::FILE> make_cfile(const char *filename, const char *flags)
@@ -155,6 +148,7 @@ static void pnm_readpaminit(FILE *file, struct pam * const pamP, const int size)
   int pnm_type=0;
   int x_dim=256, y_dim=256;
   int enable_ascii=1, img_colors=1;
+  int read_err;
 
   pamP->file = file;
   pnm_type = get_pnm_type(pamP->file);
@@ -163,19 +157,24 @@ static void pnm_readpaminit(FILE *file, struct pam * const pamP, const int size)
 
   /* Read the image file header (the input file has been rewinded). */
   if ((pnm_type == PBM_ASCII) || (pnm_type == PBM_BINARY)) {
-    read_pbm_header(file, &x_dim, &y_dim, &enable_ascii);
+    read_err = read_pbm_header(file, &x_dim, &y_dim, &enable_ascii);
     pamP->bytes_per_sample = 1;
   } else if ((pnm_type == PGM_ASCII) || (pnm_type == PGM_BINARY)) {
-    read_pgm_header(file, &x_dim, &y_dim, &img_colors, &enable_ascii);
+    read_err = read_pgm_header(file, &x_dim, &y_dim, &img_colors, &enable_ascii);
     if (img_colors >> 8 == 0)       pamP->bytes_per_sample = 1;
     else if (img_colors >> 16 == 0) pamP->bytes_per_sample = 2;
   } else if ((pnm_type == PPM_ASCII) || (pnm_type == PPM_BINARY)) {
-    read_ppm_header(file, &x_dim, &y_dim, &img_colors, &enable_ascii);
+    read_err = read_ppm_header(file, &x_dim, &y_dim, &img_colors, &enable_ascii);
     if (img_colors >> 8 == 0)       pamP->bytes_per_sample = 1;
     else if (img_colors >> 16 == 0) pamP->bytes_per_sample = 2;
   } else {
-    fprintf(stderr, "Error: Unknown PNM/PFM image format. Exiting...\n");
-    exit(1);
+    boost::format m("Unknown PNM/PFM image format.");
+    throw std::runtime_error(m.str());
+  }
+
+  if (read_err != 0) {
+    boost::format m("Something went wrong when reading the image file.");
+    throw std::runtime_error(m.str());
   }
 
   /* Perform operations. */
@@ -203,33 +202,46 @@ static int * pnm_allocpam(struct pam * const pamP) {
 }
 
 static void pnm_readpam(struct pam * const pamP, int *img_data) {
+  int read_err;
 
   /* Read the image data. */
   if ((pamP->format == PBM_ASCII) || (pamP->format == PBM_BINARY)) {
-    read_pbm_data(pamP->file, img_data, pamP->width * pamP->height, pamP->plainformat, pamP->width);
+    read_err = read_pbm_data(pamP->file, img_data, pamP->width * pamP->height, pamP->plainformat, pamP->width);
   } else if ((pamP->format == PGM_ASCII) || (pamP->format == PGM_BINARY)) {
-    read_pgm_data(pamP->file, img_data, pamP->width * pamP->height, pamP->plainformat, pamP->bytes_per_sample);
+    read_err = read_pgm_data(pamP->file, img_data, pamP->width * pamP->height, pamP->plainformat, pamP->bytes_per_sample);
   } else if ((pamP->format == PPM_ASCII) || (pamP->format == PPM_BINARY)) {
-    read_ppm_data(pamP->file, img_data, 3 * pamP->width * pamP->height, pamP->plainformat, pamP->bytes_per_sample);
+    read_err = read_ppm_data(pamP->file, img_data, 3 * pamP->width * pamP->height, pamP->plainformat, pamP->bytes_per_sample);
+  }
+
+  if (read_err != 0) {
+    boost::format m("Something went wrong when reading the image file.");
+    throw std::runtime_error(m.str());
   }
 }
 
 static void pnm_writepam(struct pam * const pamP, int *img_data) {
+  int write_err;
+
   /* Write the output image file. */
   if ((pamP->format == PBM_ASCII) || (pamP->format == PBM_BINARY)) {
-    write_pbm_file(pamP->file, img_data,
+    write_err = write_pbm_file(pamP->file, img_data,
       pamP->width, pamP->height, 1, 1, 32, pamP->plainformat
     );
   } else if ((pamP->format == PGM_ASCII) || (pamP->format == PGM_BINARY)) {
-    write_pgm_file(pamP->file, img_data,
+    write_err = write_pgm_file(pamP->file, img_data,
       pamP->width, pamP->height, 1, 1, pamP->maxval, 16, pamP->plainformat,
       pamP->bytes_per_sample
     );
   } else if ((pamP->format == PPM_ASCII) || (pamP->format == PPM_BINARY)) {
-    write_ppm_file(pamP->file, img_data,
+    write_err = write_ppm_file(pamP->file, img_data,
       pamP->width, pamP->height, 1, 1, pamP->maxval, pamP->plainformat,
       pamP->bytes_per_sample
     );
+  }
+
+  if (write_err != 0) {
+    boost::format m("Something went wrong when writing the image file.");
+    throw std::runtime_error(m.str());
   }
 }
 
