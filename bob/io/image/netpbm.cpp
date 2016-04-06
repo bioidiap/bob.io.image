@@ -202,7 +202,7 @@ static int * pnm_allocpam(struct pam * const pamP) {
 }
 
 static void pnm_readpam(struct pam * const pamP, int *img_data) {
-  int read_err;
+  int read_err=1;
 
   /* Read the image data. */
   if ((pamP->format == PBM_ASCII) || (pamP->format == PBM_BINARY)) {
@@ -220,7 +220,7 @@ static void pnm_readpam(struct pam * const pamP, int *img_data) {
 }
 
 static void pnm_writepam(struct pam * const pamP, int *img_data) {
-  int write_err;
+  int write_err=1;
 
   /* Write the output image file. */
   if ((pamP->format == PBM_ASCII) || (pamP->format == PBM_BINARY)) {
