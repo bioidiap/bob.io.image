@@ -104,20 +104,74 @@ struct pam {
 // }
 
 
+/* File open/close that handles "-" as stdin/stdout and checks errors. */
+
+FILE*
+pm_openr(const char * const name) {
+    FILE* f;
+
+    if (strcmp(name, "-") == 0)
+        f = stdin;
+    else {
+#ifndef VMS
+        f = fopen(name, "rb");
+#else
+        f = fopen (name, "r", "ctx=stm");
+#endif
+        if (f == NULL) {
+            fprintf(stderr, name);
+            // pm_perror(name);
+            exit(1);
+        }
+    }
+    return f;
+}
+
+FILE*
+pm_openw(const char * const name) {
+    FILE* f;
+
+    if (strcmp(name, "-") == 0)
+        f = stdout;
+    else {
+#ifndef VMS
+        f = fopen(name, "wb");
+#else
+        f = fopen (name, "w", "mbc=32", "mbf=2");  /* set buffer factors */
+#endif
+        if (f == NULL) {
+            fprintf(stderr, name);
+            // pm_perror(name);
+            exit(1);
+        }
+    }
+    return f;
+}
+
+void
+pm_close(FILE * const f) {
+    // fprintf(stderr, "I am closing a file\n");
+    fflush( f );
+    if ( ferror( f ) )
+        fprintf(stderr, "a file read or write error occurred at some point" );
+    if ( f != stdin )
+        if ( fclose( f ) != 0 )
+            fprintf(stderr, "fclose");
+}
 
 static boost::shared_ptr<std::FILE> make_cfile(const char *filename, const char *flags)
 {
   std::FILE* fp;
   if(strcmp(flags, "r") == 0)
-    fp = fopen(filename, "r");
+    fp = pm_openr(filename);
   else // write
-    fp = fopen(filename, "w");
+    fp = pm_openw(filename);
   if(fp == 0) {
     boost::format m("cannot open file `%s'");
     m % filename;
     throw std::runtime_error(m.str());
   }
-  return boost::shared_ptr<std::FILE>(fp, fclose);
+  return boost::shared_ptr<std::FILE>(fp, pm_close);
 }
 
 static void pnm_readpaminit(FILE *file, struct pam * const pamP, const int size) {
@@ -163,6 +217,7 @@ static void pnm_readpaminit(FILE *file, struct pam * const pamP, const int size)
 static int * pnm_allocpam(struct pam * const pamP) {
   int *img_data;
   /* Perform operations. */
+  // fprintf(stderr, "%d, %d, %d\n", pamP->width, pamP->height, sizeof(int));
   if ((pamP->format == PPM_ASCII) || (pamP->format == PPM_BINARY)) {
     img_data = (int *) malloc((3 * pamP->width * pamP->height) * sizeof(int));
   } else {
@@ -174,27 +229,28 @@ static void pnm_readpam(struct pam * const pamP, int *img_data) {
 
   /* Read the image data. */
   if ((pamP->format == PBM_ASCII) || (pamP->format == PBM_BINARY)) {
-    read_pbm_data(pamP->file, img_data, pamP->plainformat);
+    read_pbm_data(pamP->file, img_data, pamP->width * pamP->height, pamP->plainformat, pamP->width);
   } else if ((pamP->format == PGM_ASCII) || (pamP->format == PGM_BINARY)) {
-    read_pgm_data(pamP->file, img_data, pamP->plainformat);
+    read_pgm_data(pamP->file, img_data, pamP->width * pamP->height, pamP->plainformat, pamP->bytes_per_sample);
   } else if ((pamP->format == PPM_ASCII) || (pamP->format == PPM_BINARY)) {
-    read_ppm_data(pamP->file, img_data, pamP->plainformat);
+    read_ppm_data(pamP->file, img_data, 3 * pamP->width * pamP->height, pamP->plainformat, pamP->bytes_per_sample);
   }
 }
 static void pnm_writepam(struct pam * const pamP, int *img_data) {
-  char * file_name="";
   /* Write the output image file. */
   if ((pamP->format == PBM_ASCII) || (pamP->format == PBM_BINARY)) {
-    write_pbm_file(pamP->file, img_data, file_name,
+    write_pbm_file(pamP->file, img_data,
       pamP->width, pamP->height, 1, 1, 32, pamP->plainformat
     );
   } else if ((pamP->format == PGM_ASCII) || (pamP->format == PGM_BINARY)) {
-    write_pgm_file(pamP->file, img_data, file_name,
-      pamP->width, pamP->height, 1, 1, pamP->maxval, 16, pamP->plainformat
+    write_pgm_file(pamP->file, img_data,
+      pamP->width, pamP->height, 1, 1, pamP->maxval, 16, pamP->plainformat,
+      pamP->bytes_per_sample
     );
   } else if ((pamP->format == PPM_ASCII) || (pamP->format == PPM_BINARY)) {
-    write_ppm_file(pamP->file, img_data, file_name,
-      pamP->width, pamP->height, 1, 1, pamP->maxval, pamP->plainformat
+    write_ppm_file(pamP->file, img_data,
+      pamP->width, pamP->height, 1, 1, pamP->maxval, pamP->plainformat,
+      pamP->bytes_per_sample
     );
   }
 }
@@ -246,7 +302,9 @@ void im_load_gray(struct pam *in_pam, bob::io::base::array::interface& b) {
 
   T *element = static_cast<T*>(b.ptr());
   int *img_data = pnm_allocpam(in_pam);
+  // fprintf(stderr, "img_data: %x\n", img_data);
   pnm_readpam(in_pam, img_data);
+  // fprintf(stderr, "img_data after read: %x\n", img_data);
   for(size_t y=0; y<info.shape[0]; ++y)
   {
     for(size_t x=0; x<info.shape[1]; ++x)
@@ -256,7 +314,9 @@ void im_load_gray(struct pam *in_pam, bob::io::base::array::interface& b) {
       c++;
     }
   }
+  // fprintf(stderr, "freeing img_data: %x\n", img_data);
   free(img_data);
+  // fprintf(stderr, "freed img_data\n");
 }
 
 template <typename T> static
@@ -271,16 +331,13 @@ void im_load_color(struct pam *in_pam, bob::io::base::array::interface& b) {
 
   int *img_data = pnm_allocpam(in_pam);
   pnm_readpam(in_pam, img_data);
-  for(size_t y=0; y<info.shape[0]; ++y)
+  for(size_t y=0; y<info.shape[1]; ++y)
   {
-    for(size_t x=0; x<info.shape[1]; ++x)
+    for(size_t x=0; x<info.shape[2]; ++x)
     {
-      element_r[x] = img_data[c+0];
-      element_g[x] = img_data[c+1];
-      element_b[x] = img_data[c+2];
-      ++element_r;
-      ++element_g;
-      ++element_b;
+      element_r[y*info.shape[2] + x] = img_data[c+0];
+      element_g[y*info.shape[2] + x] = img_data[c+1];
+      element_b[y*info.shape[2] + x] = img_data[c+2];
       c = c + 3;
     }
   }
@@ -358,16 +415,13 @@ static void im_save_color(const bob::io::base::array::interface& b, struct pam *
   const T *element_b = element_g + frame_size;
 
   int *img_data = pnm_allocpam(out_pam);
-  for(size_t y=0; y<info.shape[0]; ++y)
+  for(size_t y=0; y<info.shape[1]; ++y)
   {
-    for(size_t x=0; x<info.shape[1]; ++x)
+    for(size_t x=0; x<info.shape[2]; ++x)
     {
-      img_data[c+0] = element_r[x];
-      img_data[c+1] = element_g[x];
-      img_data[c+2] = element_b[x];
-      ++element_r;
-      ++element_g;
-      ++element_b;
+      img_data[c+0] = element_r[y*info.shape[2] + x];
+      img_data[c+1] = element_g[y*info.shape[2] + x];
+      img_data[c+2] = element_b[y*info.shape[2] + x];
       c = c + 3;
     }
   }
@@ -393,7 +447,7 @@ static void im_save (const std::string& filename, const bob::io::base::array::in
   out_pam.height = (info.nd == 2 ? info.shape[0] : info.shape[1]);
   out_pam.width = (info.nd == 2 ? info.shape[1] : info.shape[2]);
   out_pam.depth = (info.nd == 2 ? 1 : 3);
-  out_pam.maxval = (bob::io::base::array::t_uint8 ? 255 : 65535);
+  out_pam.maxval = (info.dtype == bob::io::base::array::t_uint8 ? 255 : 65535);
   out_pam.bytes_per_sample = (info.dtype == bob::io::base::array::t_uint8 ? 1 : 2);
   if( ext.compare(".pbm") == 0)
   {

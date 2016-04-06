@@ -28,8 +28,8 @@
 #include "pnmio.h"
 
 #define  MAXLINE         1024
-#define  LITTLE_ENDIAN     -1
-#define  BIG_ENDIAN         1
+// #define  LITTLE_ENDIAN     -1
+// #define  BIG_ENDIAN         1
 #define  GREYSCALE_TYPE     0 /* used for PFM */
 #define  RGB_TYPE           1 /* used for PFM */
 
@@ -155,8 +155,8 @@ void read_pbm_header(FILE *f, int *img_xdim, int *img_ydim, int *is_ascii)
     exit(1);
   }
 
-  fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d\n",
-    magic, x_val, y_val);
+  // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d\n",
+  //   magic, x_val, y_val);
   *img_xdim   = x_val;
   *img_ydim   = y_val;
 }
@@ -217,8 +217,8 @@ void read_pgm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int
     exit(1);
   }
 
-  fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, maxcolors_val=%d\n",
-    magic, x_val, y_val, maxcolors_val);
+  // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, maxcolors_val=%d\n",
+  //   magic, x_val, y_val, maxcolors_val);
   *img_xdim   = x_val;
   *img_ydim   = y_val;
   *img_colors = maxcolors_val;
@@ -280,8 +280,8 @@ void read_ppm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors, int
     exit(1);
   }
 
-  fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, maxcolors_val=%d\n",
-    magic, x_val, y_val, maxcolors_val);
+  // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, maxcolors_val=%d\n",
+  //   magic, x_val, y_val, maxcolors_val);
   *img_xdim   = x_val;
   *img_ydim   = y_val;
   *img_colors = maxcolors_val;
@@ -356,8 +356,8 @@ void read_pfm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_type, int *
     exit(1);
   }
 
-  fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, aspect_ratio.f=%f\n",
-    magic, x_val, y_val, aspect_ratio.f);
+  // fprintf(stderr, "Info: magic=%s, x_val=%d, y_val=%d, aspect_ratio.f=%f\n",
+  //   magic, x_val, y_val, aspect_ratio.f);
 
   /* FIXME: Aspect ratio different to 1.0 is not yet supported. */
   if (!floatEqualComparison(aspect_ratio.f, -1.0, 1E-06) &&
@@ -379,37 +379,47 @@ void read_pfm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_type, int *
 /* read_pbm_data:
  * Read the data contents of a PBM (portable bit map) file.
  */
-void read_pbm_data(FILE *f, int *img_in, int is_ascii)
+void read_pbm_data(FILE *f, int *img_in, int img_size, int is_ascii, int img_width)
 {
   int i=0, c;
   int lum_val;
   int k;
+  int row_position = 0;
 
   /* Read the rest of the PPM file. */
   while ((c = fgetc(f)) != EOF) {
     ungetc(c, f);
     if (is_ascii == 1) {
       fscanf(f, "%d", &lum_val);
+      if (i >= img_size) return;
       img_in[i++] = lum_val;
     } else {
       lum_val = fgetc(f);
       /* Decode the image contents byte-by-byte. */
       for (k = 0; k < 8; k++) {
-        img_in[i++] = (lum_val >> (7-k)) & 0x1;
+        if (i >= img_size) return;
+        img_in[i++] = (lum_val >> (7-k)) & 0x1;        
+        // fprintf(stderr, "i: %d, %d\n", i, img_in[i]);
+        row_position++;
+        if (row_position >= img_width) {
+          row_position = 0;
+          break;
+        }
       }
     }
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* read_pgm_data:
  * Read the data contents of a PGM (portable grey map) file.
  */
-void read_pgm_data(FILE *f, int *img_in, int is_ascii)
+void read_pgm_data(FILE *f, int *img_in, int img_size, int is_ascii,
+  unsigned int bytes_per_sample)
 {
   int i=0, c;
   int lum_val;
-  int k;
+  // int k;
 
   /* Read the rest of the PPM file. */
   while ((c = fgetc(f)) != EOF) {
@@ -417,17 +427,25 @@ void read_pgm_data(FILE *f, int *img_in, int is_ascii)
     if (is_ascii == 1) {
 	    fscanf(f, "%d", &lum_val);
 	  } else {
-      lum_val = fgetc(f);
+      if (bytes_per_sample == 1) {
+        lum_val = fgetc(f);
+      } else {
+        lum_val = fgetc(f);
+        lum_val = lum_val << 8;
+        lum_val |= fgetc(f);
+      }
     }
+    if (i >= img_size) return;
     img_in[i++] = lum_val;
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* read_ppm_data:
  * Read the data contents of a PPM (portable pix map) file.
  */
-void read_ppm_data(FILE *f, int *img_in, int is_ascii)
+void read_ppm_data(FILE *f, int *img_in, int img_size, int is_ascii,
+  unsigned int bytes_per_sample)
 {
   int i=0, c;
   int r_val, g_val, b_val;
@@ -438,15 +456,30 @@ void read_ppm_data(FILE *f, int *img_in, int is_ascii)
     if (is_ascii == 1) {
       fscanf(f, "%d %d %d", &r_val, &g_val, &b_val);
     } else {
-      r_val = fgetc(f);
-      g_val = fgetc(f);
-      b_val = fgetc(f);
+      if (bytes_per_sample == 1) {
+        r_val = fgetc(f);
+        g_val = fgetc(f);
+        b_val = fgetc(f);
+      } else {
+        r_val = fgetc(f);
+        r_val = r_val << 8;
+        r_val |= fgetc(f);
+
+        g_val = fgetc(f);
+        g_val = g_val << 8;
+        g_val |= fgetc(f);
+
+        b_val = fgetc(f);
+        b_val = b_val << 8;
+        b_val |= fgetc(f);
+      }
     }
+    if (i >= img_size) return;
     img_in[i++] = r_val;
     img_in[i++] = g_val;
     img_in[i++] = b_val;
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* read_pfm_data:
@@ -474,18 +507,19 @@ void read_pfm_data(FILE *f, float *img_in, int img_type, int endianess)
       img_in[i++] = g_val;
     }
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* write_pbm_file:
  * Write the contents of a PBM (portable bit map) file.
  */
-void write_pbm_file(FILE *f, int *img_out, char *img_out_fname,
+void write_pbm_file(FILE *f, int *img_out,
   int x_size, int y_size, int x_scale_val, int y_scale_val, int linevals,
   int is_ascii)
 {
   int i, j, x_scaled_size, y_scaled_size;
   int k, v, temp, step;
+  int row_position = 0;
 
   x_scaled_size = x_size * x_scale_val;
   y_scaled_size = y_size * y_scale_val;
@@ -512,6 +546,11 @@ void write_pbm_file(FILE *f, int *img_out, char *img_out_fname,
 		    for (k = 0; k < 8; k++) {
           v = img_out[i*x_scaled_size+j+k];
           temp |= (v << (7-k));
+          row_position++;
+          if (row_position >= x_size) {
+            row_position = 0;
+            break;
+          }
 		    }
         fprintf(f, "%c", temp);
       }
@@ -520,15 +559,16 @@ void write_pbm_file(FILE *f, int *img_out, char *img_out_fname,
       }
     }
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* write_pgm_file:
  * Write the contents of a PGM (portable grey map) file.
  */
-void write_pgm_file(FILE *f, int *img_out, char *img_out_fname,
+void write_pgm_file(FILE *f, int *img_out,
   int x_size, int y_size, int x_scale_val, int y_scale_val,
-  int img_colors, int linevals, int is_ascii)
+  int img_colors, int linevals, int is_ascii,
+  unsigned int bytes_per_sample)
 {
   int i, j, x_scaled_size, y_scaled_size;
 
@@ -556,19 +596,24 @@ void write_pgm_file(FILE *f, int *img_out, char *img_out_fname,
           fprintf(f, "\n");
         }
       } else {
-        fprintf(f, "%c", img_out[i*x_scaled_size+j]);
+        if (bytes_per_sample == 1) {
+          fprintf(f, "%c", img_out[i*x_scaled_size+j]);
+        } else {
+          fprintf(f, "%c", img_out[i*x_scaled_size+j]);
+          fprintf(f, "%c", (img_out[i*x_scaled_size+j] >> 8));
+        }
       }
     }
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* write_ppm_file:
  * Write the contents of a PPM (portable pix map) file.
  */
-void write_ppm_file(FILE *f, int *img_out, char *img_out_fname,
+void write_ppm_file(FILE *f, int *img_out,
   int x_size, int y_size, int x_scale_val, int y_scale_val,
-  int img_colors, int is_ascii)
+  int img_colors, int is_ascii, unsigned int bytes_per_sample)
 {
   int i, j, x_scaled_size, y_scaled_size;
 
@@ -599,14 +644,25 @@ void write_ppm_file(FILE *f, int *img_out, char *img_out_fname,
           fprintf(f, "\n");
         }
       } else {
-        fprintf(f, "%c%c%c",
-          img_out[3*(i*x_scaled_size+j)+0],
-          img_out[3*(i*x_scaled_size+j)+1],
-          img_out[3*(i*x_scaled_size+j)+2]);
+        if (bytes_per_sample == 1) {
+          fprintf(f, "%c%c%c",
+            img_out[3*(i*x_scaled_size+j)+0],
+            img_out[3*(i*x_scaled_size+j)+1],
+            img_out[3*(i*x_scaled_size+j)+2]);
+        } else {
+          fprintf(f, "%c%c%c",
+            img_out[3*(i*x_scaled_size+j)+0],
+            img_out[3*(i*x_scaled_size+j)+1],
+            img_out[3*(i*x_scaled_size+j)+2]);
+          fprintf(f, "%c%c%c",
+            img_out[3*(i*x_scaled_size+j)+0] >> 8,
+            img_out[3*(i*x_scaled_size+j)+1] >> 8,
+            img_out[3*(i*x_scaled_size+j)+2] >> 8);
+        }
       }
     }
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* write_pfm_file:
@@ -648,7 +704,7 @@ void write_pfm_file(FILE *f, float *img_out, char *img_out_fname,
       }
     }
   }
-  fclose(f);
+  // fclose(f);
 }
 
 /* ReadFloat:

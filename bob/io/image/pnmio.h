@@ -56,19 +56,19 @@ void read_ppm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors,
        int *is_ascii);
 void read_pfm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_type,
        int *endianess);
-void read_pbm_data(FILE *f, int *img_in, int is_ascii);
-void read_pgm_data(FILE *f, int *img_in, int is_ascii);
-void read_ppm_data(FILE *f, int *img_in, int is_ascii);
+void read_pbm_data(FILE *f, int *img_in, int img_size, int is_ascii, int img_width);
+void read_pgm_data(FILE *f, int *img_in, int img_size, int is_ascii, unsigned int bytes_per_sample);
+void read_ppm_data(FILE *f, int *img_in, int img_size, int is_ascii, unsigned int bytes_per_sample);
 void read_pfm_data(FILE *f, float *img_in, int img_type, int endianess);
-void write_pbm_file(FILE *f, int *img_out, char *img_out_fname,
+void write_pbm_file(FILE *f, int *img_out,
        int x_size, int y_size, int x_scale_val, int y_scale_val, int linevals,
        int is_ascii);
-void write_pgm_file(FILE *f, int *img_out, char *img_out_fname,
+void write_pgm_file(FILE *f, int *img_out,
        int x_size, int y_size, int x_scale_val, int y_scale_val,
-       int img_colors, int linevals, int is_ascii);
-void write_ppm_file(FILE *f, int *img_out, char *img_out_fname,
+       int img_colors, int linevals, int is_ascii, unsigned int bytes_per_sample);
+void write_ppm_file(FILE *f, int *img_out,
        int x_size, int y_size, int x_scale_val, int y_scale_val,
-       int img_colors, int is_ascii);
+       int img_colors, int is_ascii, unsigned int bytes_per_sample);
 void write_pfm_file(FILE *f, float *img_out, char *img_out_fname,
        int x_size, int y_size, int img_type, int endianess);
 
