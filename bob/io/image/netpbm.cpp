@@ -80,29 +80,6 @@ struct pam {
            */
 };
 
-// void overflow_add(int a, int b) {
-//   if( a > INT_MAX - b)
-//     boost::format m("(netpbm) object too large");
-//     throw std::runtime_error(m.str());
-// }
-// void overflow2(int a, int b) {
-//   if(a < 0 || b < 0)
-//     boost::format m("(netpbm) object too large");
-//     throw std::runtime_error(m.str());
-//   if(b == 0)
-//     return;
-//   if(a > INT_MAX / b)
-//     boost::format m("(netpbm) object too large");
-//     throw std::runtime_error(m.str());
-// }
-// void *malloc2(int a, int b) {
-//   overflow2(a, b);
-//   if(a*b == 0)
-//     boost::format m("(netpbm) Zero byte allocation");
-//     throw std::runtime_error(m.str());
-//   return malloc(a*b);
-// }
-
 
 /* File open/close that handles "-" as stdin/stdout and checks errors. */
 
@@ -182,7 +159,6 @@ static void pnm_readpaminit(FILE *file, struct pam * const pamP, const int size)
   pamP->file = file;
   pnm_type = get_pnm_type(pamP->file);
   rewind(pamP->file);
-  // fprintf(stderr, "%d\n", pnm_type);
   pamP->format = pnm_type;
 
   /* Read the image file header (the input file has been rewinded). */
@@ -214,10 +190,10 @@ static void pnm_readpaminit(FILE *file, struct pam * const pamP, const int size)
   pamP->maxval = img_colors;
 
 }
+
 static int * pnm_allocpam(struct pam * const pamP) {
   int *img_data;
   /* Perform operations. */
-  // fprintf(stderr, "%d, %d, %d\n", pamP->width, pamP->height, sizeof(int));
   if ((pamP->format == PPM_ASCII) || (pamP->format == PPM_BINARY)) {
     img_data = (int *) malloc((3 * pamP->width * pamP->height) * sizeof(int));
   } else {
@@ -225,6 +201,7 @@ static int * pnm_allocpam(struct pam * const pamP) {
   }
   return (img_data);
 }
+
 static void pnm_readpam(struct pam * const pamP, int *img_data) {
 
   /* Read the image data. */
@@ -236,6 +213,7 @@ static void pnm_readpam(struct pam * const pamP, int *img_data) {
     read_ppm_data(pamP->file, img_data, 3 * pamP->width * pamP->height, pamP->plainformat, pamP->bytes_per_sample);
   }
 }
+
 static void pnm_writepam(struct pam * const pamP, int *img_data) {
   /* Write the output image file. */
   if ((pamP->format == PBM_ASCII) || (pamP->format == PBM_BINARY)) {
@@ -302,9 +280,7 @@ void im_load_gray(struct pam *in_pam, bob::io::base::array::interface& b) {
 
   T *element = static_cast<T*>(b.ptr());
   int *img_data = pnm_allocpam(in_pam);
-  // fprintf(stderr, "img_data: %x\n", img_data);
   pnm_readpam(in_pam, img_data);
-  // fprintf(stderr, "img_data after read: %x\n", img_data);
   for(size_t y=0; y<info.shape[0]; ++y)
   {
     for(size_t x=0; x<info.shape[1]; ++x)
@@ -314,9 +290,7 @@ void im_load_gray(struct pam *in_pam, bob::io::base::array::interface& b) {
       c++;
     }
   }
-  // fprintf(stderr, "freeing img_data: %x\n", img_data);
   free(img_data);
-  // fprintf(stderr, "freed img_data\n");
 }
 
 template <typename T> static
@@ -467,9 +441,6 @@ static void im_save (const std::string& filename, const bob::io::base::array::in
     throw std::runtime_error("cannot save a color image into a file of this type.");
   }
 
-  // Writes header in file
-  // pnm_writepaminit(&out_pam);
-
   // Writes content
   if(info.dtype == bob::io::base::array::t_uint8) {
 
@@ -612,12 +583,7 @@ class ImageNetpbmFile: public bob::io::base::File {
 
 std::string ImageNetpbmFile::s_codecname = "bob.image_netpbm";
 
-// static bool netpbm_initialized = false;
 
 boost::shared_ptr<bob::io::base::File> make_netpbm_file (const char* path, char mode) {
-  // if (!netpbm_initialized) {
-  //   pm_init("bob",0);
-  //   netpbm_initialized = true;
-  // }
   return boost::make_shared<ImageNetpbmFile>(path, mode);
 }
