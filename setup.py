@@ -456,6 +456,7 @@ setup(
           "bob/io/image/png.cpp",
           "bob/io/image/jpeg.cpp",
           "bob/io/image/bmp.cpp",
+          "bob/io/image/pnmio.c",
           "bob/io/image/netpbm.cpp",
           "bob/io/image/main.cpp",
         ],
