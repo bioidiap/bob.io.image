@@ -82,7 +82,6 @@ static PyObject* build_version_dictionary() {
   auto retval_ = make_safe(retval);
 
   if (!dict_steal(retval, "libjpeg", libjpeg_version())) return 0;
-  if (!dict_steal(retval, "libnetpbm", Py_BuildValue("s", "Unknown version"))) return 0;
   if (!dict_steal(retval, "libpng", libpng_version())) return 0;
   if (!dict_steal(retval, "libtiff", libtiff_version())) return 0;
   if (!dict_steal(retval, "giflib", giflib_version())) return 0;

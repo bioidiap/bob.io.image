@@ -32,7 +32,6 @@
 .. _lapack: http://www.netlib.org/lapack
 .. _latex: http://www.latex-project.org/
 .. _libjpeg: http://libjpeg.sourceforge.net/
-.. _libnetpbm: http://netpbm.sourceforge.net/doc/libnetpbm.html
 .. _libpng: http://libpng.org/pub/png/libpng.html
 .. _libsvm: http://www.csie.ntu.edu.tw/~cjlin/libsvm/
 .. _libtiff: http://www.remotesensing.org/libtiff/

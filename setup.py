@@ -328,90 +328,31 @@ class gif:
         ('%s_VERSION' % self.name.upper(), '"%s"' % self.version),
         ]
 
-class netpbm:
-
-  def __init__ (self, only_static=False):
-    """
-    Searches for netpbm in stock locations. Allows user to override.
-
-    If the user sets the environment variable BOB_PREFIX_PATH, that prefixes
-    the standard path locations.
-
-    Parameters:
-
-    only_static, boolean
-      A flag, that indicates if we intend to link against the static library
-      only. This will trigger our library search to disconsider shared
-      libraries when searching.
-    """
-
-    self.name = 'netpbm'
-    header = 'pam.h'
-
-    candidates = find_header(header, subpaths=[self.name, ''])
-
-    if not candidates:
-      raise RuntimeError("could not find %s's `%s' - have you installed %s on this machine?" % (self.name, header, self.name))
-
-    self.include_directory = os.path.dirname(candidates[0])
-    found = True
-
-    # normalize
-    self.include_directory = os.path.normpath(self.include_directory)
-
-    # find library
-    prefix = os.path.dirname(os.path.dirname(self.include_directory))
-    module = 'netpbm'
-    candidates = find_library(module, prefixes=[prefix], only_static=only_static)
-
-    if not candidates:
-      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
-
-    # libraries
-    self.libraries = []
-    name, ext = os.path.splitext(os.path.basename(candidates[0]))
-    if ext in ['.so', '.a', '.dylib', '.dll']:
-      self.libraries.append(name[3:]) #strip 'lib' from the name
-    else: #link against the whole thing
-      self.libraries.append(':' + os.path.basename(candidates[0]))
-
-    # library path
-    self.library_directory = os.path.dirname(candidates[0])
-
-  def macros(self):
-    return [ ('HAVE_%s' % self.name.upper(), '1'), ]
-
 jpeg_pkg = jpeg()
 tiff_pkg = tiff()
 gif_pkg = gif()
-netpbm_pkg = netpbm()
 
 system_include_dirs = [
     jpeg_pkg.include_directory,
     tiff_pkg.include_directory,
     gif_pkg.include_directory,
-    netpbm_pkg.include_directory,
     ]
 
 library_dirs = [
     jpeg_pkg.library_directory,
     tiff_pkg.library_directory,
     gif_pkg.library_directory,
-    netpbm_pkg.library_directory,
     ]
 
 libraries = \
     jpeg_pkg.libraries + \
     tiff_pkg.libraries + \
-    gif_pkg.libraries + \
-    netpbm_pkg.libraries
+    gif_pkg.libraries
 
 define_macros = \
     jpeg_pkg.macros() + \
     tiff_pkg.macros() + \
-    gif_pkg.macros() + \
-    netpbm_pkg.macros()
-
+    gif_pkg.macros()
 
 setup(
 
@@ -456,6 +397,7 @@ setup(
           "bob/io/image/png.cpp",
           "bob/io/image/jpeg.cpp",
           "bob/io/image/bmp.cpp",
+          "bob/io/image/pnmio.c",
           "bob/io/image/netpbm.cpp",
           "bob/io/image/main.cpp",
         ],
