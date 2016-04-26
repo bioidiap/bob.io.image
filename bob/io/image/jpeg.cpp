@@ -271,7 +271,7 @@ static void im_save (const std::string& filename, const bob::io::base::array::in
   jpeg_set_quality(&cinfo, s_jpeg_quality, TRUE);
 
   // 4.
-  jpeg_start_compress(&cinfo, true);
+  jpeg_start_compress(&cinfo, TRUE);
 
   // Writes content
   if(info.dtype == bob::io::base::array::t_uint8) {
