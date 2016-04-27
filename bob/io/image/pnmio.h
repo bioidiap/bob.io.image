@@ -48,6 +48,8 @@
 
 
 /* PNM/PFM API. */
+
+extern "C"{
 int  get_pnm_type(FILE *f);
 int read_pbm_header(FILE *f, int *img_xdim, int *img_ydim, int *is_ascii);
 int read_pgm_header(FILE *f, int *img_xdim, int *img_ydim, int *img_colors,
@@ -66,5 +68,6 @@ int write_pgm_file(FILE *f, int *img_out,
 int write_ppm_file(FILE *f, int *img_out,
        int x_size, int y_size, int x_scale_val, int y_scale_val,
        int img_colors, int is_ascii, unsigned int bytes_per_sample);
+}
 
 #endif /* PNMIO_H */
