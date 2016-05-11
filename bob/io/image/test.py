@@ -65,3 +65,15 @@ def test_netpbm():
   transcode(test_utils.datafile('test_2.ppm', __name__))  # indexed, works fine
   # transcode(test_utils.datafile('test.jpg', __name__)) #does not work
   # because of re-compression
+
+
+def test_cpp_interface():
+  from _library import _test_io
+  import tempfile
+  import shutil
+
+  tmpdir = tempfile.mkdtemp(prefix="bob_io_image")
+  try:
+    _test_io(tmpdir)
+  finally:
+    shutil.rmtree(tmpdir)

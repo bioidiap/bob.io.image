@@ -1,6 +1,10 @@
 # import Libraries of other lib packages
 import bob.io.base
 
+# import our own Library
+import bob.extension
+bob.extension.load_bob_library('bob.io.image', __file__)
+
 from . import _library
 from . import version
 from .version import module as __version__

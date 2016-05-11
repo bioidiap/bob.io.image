@@ -9,7 +9,7 @@ import os
 from setuptools import setup, find_packages, dist
 dist.Distribution(dict(setup_requires=['bob.extension', 'bob.blitz'] + bob_packages))
 from bob.extension.utils import egrep, find_header, find_library
-from bob.blitz.extension import Extension, build_ext
+from bob.blitz.extension import Extension, Library, build_ext
 
 from bob.extension.utils import load_requirements
 build_requires = load_requirements()
@@ -35,7 +35,7 @@ def libjpeg_turbo_version(header):
 
   vv = egrep(header, r"#\s*define\s+LIBJPEG_TURBO_VERSION\s+([\d\.]+)")
   if not len(vv): return None
-  return vv[0].group(1) + ' (turbo)'
+  return vv[0].group(1) + '-turbo'
 
 class jpeg:
 
@@ -373,8 +373,6 @@ setup(
     setup_requires = build_requires,
     install_requires = build_requires,
 
-
-
     ext_modules = [
       Extension("bob.io.image.version",
         [
@@ -390,7 +388,7 @@ setup(
         define_macros = define_macros,
       ),
 
-      Extension("bob.io.image._library",
+      Library("bob.io.image.bob_io_image",
         [
           "bob/io/image/tiff.cpp",
           "bob/io/image/gif.cpp",
@@ -399,6 +397,19 @@ setup(
           "bob/io/image/bmp.cpp",
           "bob/io/image/pnmio.cpp",
           "bob/io/image/netpbm.cpp",
+        ],
+        packages = packages,
+        boost_modules = boost_modules,
+        bob_packages = bob_packages,
+        version = version,
+        system_include_dirs = system_include_dirs,
+        library_dirs = library_dirs,
+        libraries = libraries,
+        define_macros = define_macros,
+      ),
+
+      Extension("bob.io.image._library",
+        [
           "bob/io/image/main.cpp",
         ],
         packages = packages,

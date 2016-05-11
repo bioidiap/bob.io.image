@@ -9,6 +9,8 @@
  * Copyright (C) 2011-2013 Idiap Research Institute, Martigny, Switzerland
  */
 
+#ifdef HAVE_LIBJPEG
+
 #include <boost/filesystem.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -19,6 +21,7 @@
 #include <string>
 
 #include <bob.io.base/File.h>
+#include <bob.io.image/io.h>
 
 #include <jpeglib.h>
 
@@ -406,3 +409,25 @@ std::string ImageJpegFile::s_codecname = "bob.image_jpeg";
 boost::shared_ptr<bob::io::base::File> make_jpeg_file (const char* path, char mode) {
   return boost::make_shared<ImageJpegFile>(path, mode);
 }
+
+
+template <int N>
+blitz::Array<uint8_t,N> bob::io::image::read_jpeg(const std::string& filename){
+  ImageJpegFile jpeg(filename.c_str(), 'r');
+  return dynamic_cast<bob::io::base::File&>(jpeg).read<uint8_t,N>(0);
+}
+
+template <int N>
+void bob::io::image::write_jpeg(const blitz::Array<uint8_t,N>& image, const std::string& filename){
+  ImageJpegFile jpeg(filename.c_str(), 'w');
+  dynamic_cast<bob::io::base::File&>(jpeg).write(image);
+}
+
+// instantiate
+template blitz::Array<uint8_t, 2> bob::io::image::read_jpeg(const std::string&);
+template blitz::Array<uint8_t, 3> bob::io::image::read_jpeg(const std::string&);
+
+template void bob::io::image::write_jpeg(const blitz::Array<uint8_t, 2>&, const std::string&);
+template void bob::io::image::write_jpeg(const blitz::Array<uint8_t, 3>&, const std::string&);
+
+#endif // HAVE_LIBJPEG
