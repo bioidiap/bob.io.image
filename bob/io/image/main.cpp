@@ -17,7 +17,7 @@
 #include "file.h"
 
 #include <bob.extension/documentation.h>
-#include <bob.io.image/io.h>
+#include <bob.io.image/jpeg.h>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 
@@ -53,14 +53,14 @@ BOB_TRY
 #ifdef HAVE_LIBJPEG
   boost::filesystem::path jpeg_gray(tempdir); jpeg_gray /= std::string("gray.jpg");
   bob::io::image::write_jpeg(gray_image, jpeg_gray.string());
-  blitz::Array<uint8_t, 2> gray_jpeg = bob::io::image::read_jpeg<2>(jpeg_gray.string());
+  blitz::Array<uint8_t, 2> gray_jpeg = bob::io::image::read_jpeg<uint8_t, 2>(jpeg_gray.string());
 
   if (blitz::any(blitz::abs(gray_image - gray_jpeg) > 10))
     throw std::runtime_error("Gray image IO did not succeed, check " + jpeg_gray.string());
 
   boost::filesystem::path jpeg_color(tempdir); jpeg_color /= std::string("color.jpg");
   bob::io::image::write_jpeg(color_image, jpeg_color.string());
-  blitz::Array<uint8_t, 3> color_jpeg = bob::io::image::read_jpeg<3>(jpeg_color.string());
+  blitz::Array<uint8_t, 3> color_jpeg = bob::io::image::read_jpeg<uint8_t, 3>(jpeg_color.string());
 
   if (blitz::any(blitz::abs(color_image - color_jpeg) > 10))
     throw std::runtime_error("Color image IO did not succeed, check " + jpeg_color.string());

@@ -20,8 +20,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob.io.base/File.h>
-#include <bob.io.image/io.h>
+#include <bob.io.image/jpeg.h>
 
 #include <jpeglib.h>
 
@@ -304,130 +303,78 @@ static void im_save (const std::string& filename, const bob::io::base::array::in
 }
 
 
-class ImageJpegFile: public bob::io::base::File {
+/**
+ * JPEG class
+*/
 
-  public: //api
+bob::io::image::JPEGFile::JPEGFile(const char* path, char mode)
+: m_filename(path),
+  m_newfile(true)
+{
+  //checks if file exists
+  if (mode == 'r' && !boost::filesystem::exists(path)) {
+    boost::format m("file '%s' is not readable");
+    m % path;
+    throw std::runtime_error(m.str());
+  }
 
-    ImageJpegFile(const char* path, char mode):
-      m_filename(path),
-      m_newfile(true) {
-
-        //checks if file exists
-        if (mode == 'r' && !boost::filesystem::exists(path)) {
-          boost::format m("file '%s' is not readable");
-          m % path;
-          throw std::runtime_error(m.str());
-        }
-
-        if (mode == 'r' || (mode == 'a' && boost::filesystem::exists(path))) {
-          {
-            im_peek(path, m_type);
-            m_length = 1;
-            m_newfile = false;
-          }
-        }
-        else {
-          m_length = 0;
-          m_newfile = true;
-        }
-
-      }
-
-    virtual ~ImageJpegFile() { }
-
-    virtual const char* filename() const {
-      return m_filename.c_str();
+  if (mode == 'r' || (mode == 'a' && boost::filesystem::exists(path))) {
+    {
+      im_peek(path, m_type);
+      m_length = 1;
+      m_newfile = false;
     }
+  }
+  else {
+    m_length = 0;
+    m_newfile = true;
+  }
+}
 
-    virtual const bob::io::base::array::typeinfo& type_all() const {
-      return m_type;
-    }
 
-    virtual const bob::io::base::array::typeinfo& type() const {
-      return m_type;
-    }
+void bob::io::image::JPEGFile::read(bob::io::base::array::interface& buffer, size_t index) {
+  if (m_newfile)
+    throw std::runtime_error("uninitialized image file cannot be read");
 
-    virtual size_t size() const {
-      return m_length;
-    }
+  if (!buffer.type().is_compatible(m_type)) buffer.set(m_type);
 
-    virtual const char* name() const {
-      return s_codecname.c_str();
-    }
+  if (index != 0)
+    throw std::runtime_error("cannot read image with index > 0 -- there is only one image in an image file");
 
-    virtual void read_all(bob::io::base::array::interface& buffer) {
-      read(buffer, 0); ///we only have 1 image in an image file anyways
-    }
+  if(!buffer.type().is_compatible(m_type)) buffer.set(m_type);
 
-    virtual void read(bob::io::base::array::interface& buffer, size_t index) {
-      if (m_newfile)
-        throw std::runtime_error("uninitialized image file cannot be read");
+  // load jpeg
+  im_load(m_filename, buffer);
+}
 
-      if (!buffer.type().is_compatible(m_type)) buffer.set(m_type);
+size_t bob::io::image::JPEGFile::append(const bob::io::base::array::interface& buffer) {
+  if (m_newfile) {
+    im_save(m_filename, buffer);
+    m_type = buffer.type();
+    m_newfile = false;
+    m_length = 1;
+    return 0;
+  }
 
-      if (index != 0)
-        throw std::runtime_error("cannot read image with index > 0 -- there is only one image in an image file");
+  throw std::runtime_error("image files only accept a single array");
+}
 
-      if(!buffer.type().is_compatible(m_type)) buffer.set(m_type);
-      im_load(m_filename, buffer);
-    }
+void bob::io::image::JPEGFile::write(const bob::io::base::array::interface& buffer) {
+  //overwriting position 0 should always work
+  if (m_newfile) {
+    append(buffer);
+    return;
+  }
 
-    virtual size_t append (const bob::io::base::array::interface& buffer) {
-      if (m_newfile) {
-        im_save(m_filename, buffer);
-        m_type = buffer.type();
-        m_newfile = false;
-        m_length = 1;
-        return 0;
-      }
+  throw std::runtime_error("image files only accept a single array");
+}
 
-      throw std::runtime_error("image files only accept a single array");
-    }
 
-    virtual void write (const bob::io::base::array::interface& buffer) {
-      //overwriting position 0 should always work
-      if (m_newfile) {
-        append(buffer);
-        return;
-      }
 
-      throw std::runtime_error("image files only accept a single array");
-    }
-
-  private: //representation
-    std::string m_filename;
-    bool m_newfile;
-    bob::io::base::array::typeinfo m_type;
-    size_t m_length;
-
-    static std::string s_codecname;
-
-};
-
-std::string ImageJpegFile::s_codecname = "bob.image_jpeg";
+std::string bob::io::image::JPEGFile::s_codecname = "bob.image_jpeg";
 
 boost::shared_ptr<bob::io::base::File> make_jpeg_file (const char* path, char mode) {
-  return boost::make_shared<ImageJpegFile>(path, mode);
+  return boost::make_shared<bob::io::image::JPEGFile>(path, mode);
 }
-
-
-template <int N>
-blitz::Array<uint8_t,N> bob::io::image::read_jpeg(const std::string& filename){
-  ImageJpegFile jpeg(filename.c_str(), 'r');
-  return dynamic_cast<bob::io::base::File&>(jpeg).read<uint8_t,N>(0);
-}
-
-template <int N>
-void bob::io::image::write_jpeg(const blitz::Array<uint8_t,N>& image, const std::string& filename){
-  ImageJpegFile jpeg(filename.c_str(), 'w');
-  dynamic_cast<bob::io::base::File&>(jpeg).write(image);
-}
-
-// instantiate
-template blitz::Array<uint8_t, 2> bob::io::image::read_jpeg(const std::string&);
-template blitz::Array<uint8_t, 3> bob::io::image::read_jpeg(const std::string&);
-
-template void bob::io::image::write_jpeg(const blitz::Array<uint8_t, 2>&, const std::string&);
-template void bob::io::image::write_jpeg(const blitz::Array<uint8_t, 3>&, const std::string&);
 
 #endif // HAVE_LIBJPEG
