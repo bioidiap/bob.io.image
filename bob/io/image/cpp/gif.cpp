@@ -2,10 +2,12 @@
  * @file io/cxx/ImageGifFile.cc
  * @date Fri Nov 23 16:53:00 2012 +0200
  * @author Laurent El Shafey <laurent.el-shafey@idiap.ch>
+ * @author Manuel Gunther <siebenkopf@googlemail.com>
  *
  * @brief Implements an image format reader/writer using giflib.
  *
  * Copyright (C) 2011-2013 Idiap Research Institute, Martigny, Switzerland
+ * Copyright (c) 2016, Regents of the University of Colorado on behalf of the University of Colorado Colorado Springs.
  */
 
 #ifdef HAVE_GIFLIB

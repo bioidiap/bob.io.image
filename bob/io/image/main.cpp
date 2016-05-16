@@ -1,8 +1,12 @@
 /**
  * @author Andre Anjos <andre.anjos@idiap.ch>
+ * @author Manuel Gunther <siebenkopf@googlemail.com>
  * @date Fri 16 May 12:33:38 2014 CEST
  *
  * @brief Pythonic bindings
+ *
+ * Copyright (C) 2011-2013 Idiap Research Institute, Martigny, Switzerland
+ * Copyright (c) 2016, Regents of the University of Colorado on behalf of the University of Colorado Colorado Springs.
  */
 
 #ifdef NO_IMPORT_ARRAY
@@ -23,6 +27,7 @@
 #include <bob.io.image/bmp.h>
 #include <bob.io.image/jpeg.h>
 #include <bob.io.image/gif.h>
+#include <bob.io.image/netpbm.h>
 
 
 #ifdef HAVE_LIBJPEG
@@ -55,12 +60,12 @@ BOB_TRY
     color_image(i, blitz::Range::all(), blitz::Range::all()) = gray_image(blitz::Range::all(), blitz::Range::all());
 
   // BMP; only color images are supported
-  boost::filesystem::path bmp_color(tempdir); bmp_color /= std::string("color.bmp");
-  bob::io::image::write_bmp(color_image, bmp_color.string());
-  blitz::Array<uint8_t, 3> color_bmp = bob::io::image::read_bmp<uint8_t>(bmp_color.string());
+  boost::filesystem::path bmp(tempdir); bmp /= std::string("color.bmp");
+  bob::io::image::write_bmp(color_image, bmp.string());
+  blitz::Array<uint8_t, 3> color_bmp = bob::io::image::read_bmp<uint8_t>(bmp.string());
 
   if (blitz::any(blitz::abs(color_image - color_bmp) > 0))
-    throw std::runtime_error("BMP color image IO did not succeed, check " + bmp_color.string());
+    throw std::runtime_error("BMP image IO did not succeed, check " + bmp.string());
 
 
 #ifdef HAVE_LIBGIF
@@ -69,16 +74,32 @@ BOB_TRY
   bob::io::image::write_gif(gray_image, gif_gray.string());
   blitz::Array<uint8_t, 2> gray_gif = bob::io::image::read_gif<uint8_t, 2>(gif_gray.string());
 
-  if (blitz::any(blitz::abs(gray_image - gray_gif) > 10))
+  if (blitz::any(blitz::abs(gray_image - gray_gif) > 0))
     throw std::runtime_error("GIF gray image IO did not succeed, check " + gif_gray.string());
 
   boost::filesystem::path gif_color(tempdir); gif_color /= std::string("color.gif");
   bob::io::image::write_gif(color_image, gif_color.string());
   blitz::Array<uint8_t, 3> color_gif = bob::io::image::read_gif<uint8_t, 3>(gif_color.string());
 
-  if (blitz::any(blitz::abs(color_image - color_gif) > 10))
+  if (blitz::any(blitz::abs(color_image - color_gif) > 0))
     throw std::runtime_error("GIF color image IO did not succeed, check " + gif_color.string());
 #endif
+
+  // NetPBM
+  boost::filesystem::path pgm(tempdir); pgm /= std::string("gray.pgm");
+  bob::io::image::write_p_m(gray_image, pgm.string());
+  blitz::Array<uint8_t, 2> gray_pgm = bob::io::image::read_p_m<uint8_t, 2>(pgm.string());
+
+  if (blitz::any(blitz::abs(gray_image - gray_pgm) > 0))
+    throw std::runtime_error("PGM image IO did not succeed, check " + pgm.string());
+
+  boost::filesystem::path ppm(tempdir); ppm /= std::string("color.ppm");
+  bob::io::image::write_p_m(color_image, ppm.string());
+  blitz::Array<uint8_t, 3> color_ppm = bob::io::image::read_p_m<uint8_t, 3>(ppm.string());
+
+  if (blitz::any(blitz::abs(color_image - color_ppm) > 0))
+    throw std::runtime_error("PPM image IO did not succeed, check " + ppm.string());
+
 
 #ifdef HAVE_LIBJPEG
   // JPEG

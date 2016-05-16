@@ -2,9 +2,9 @@
  * @date Wed May 11 12:39:37 MDT 2016
  * @author Manuel Gunther <siebenkopf@googlemail.com>
  *
- * @brief The file provides an easy C++ interface to read and write JPEG images
+ * @brief The file provides an easy C++ interface to read and write JPEG images using LIBJPEG
  *
- * Copyright (c) 2016 , Regents of the University of Colorado on behalf of the University of Colorado Colorado Springs.
+ * Copyright (c) 2016, Regents of the University of Colorado on behalf of the University of Colorado Colorado Springs.
  * All rights reserved.
 
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:

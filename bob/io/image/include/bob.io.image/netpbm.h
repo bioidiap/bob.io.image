@@ -2,7 +2,7 @@
  * @date Wed May 11 12:39:37 MDT 2016
  * @author Manuel Gunther <siebenkopf@googlemail.com>
  *
- * @brief The file provides an easy C++ interface to read and write GIF images using GIFLIB
+ * @brief The file provides an easy C++ interface to read and write images using the NetPBM interface
  *
  * Copyright (c) 2016, Regents of the University of Colorado on behalf of the University of Colorado Colorado Springs.
  * All rights reserved.
@@ -18,10 +18,8 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef BOB_IO_IMAGE_GIF_H
-#define BOB_IO_IMAGE_GIF_H
-
-#ifdef HAVE_GIFLIB
+#ifndef BOB_IO_IMAGE_NETPBM_H
+#define BOB_IO_IMAGE_NETPBM_H
 
 #include <stdexcept>
 #include <string>
@@ -37,13 +35,13 @@
  */
 namespace bob { namespace io { namespace image {
 
-  class GIFFile: public bob::io::base::File {
+  class NetPBMFile: public bob::io::base::File {
 
     public: //api
 
-      GIFFile(const char* path, char mode);
+      NetPBMFile(const char* path, char mode);
 
-      virtual ~GIFFile() { }
+      virtual ~NetPBMFile() { }
 
       virtual const char* filename() const {
         return m_filename.c_str();
@@ -89,19 +87,17 @@ namespace bob { namespace io { namespace image {
   };
 
   template <class T, int N>
-  blitz::Array<T,N> read_gif(const std::string& filename){
-    GIFFile gif(filename.c_str(), 'r');
-    return gif.read<T,N>(0);
+  blitz::Array<T,N> read_p_m(const std::string& filename){
+    NetPBMFile p_m(filename.c_str(), 'r');
+    return p_m.read<T,N>(0);
   }
 
   template <class T, int N>
-  void write_gif(const blitz::Array<T,N>& image, const std::string& filename){
-    GIFFile gif(filename.c_str(), 'w');
-    gif.write(image);
+  void write_p_m(const blitz::Array<T,N>& image, const std::string& filename){
+    NetPBMFile p_m(filename.c_str(), 'w');
+    p_m.write(image);
   }
 
 }}}
 
-#endif // HAVE_GIFLIB
-
-#endif /* BOB_IO_IMAGE_GIF_H */
+#endif /* BOB_IO_IMAGE_NETPBM_H */

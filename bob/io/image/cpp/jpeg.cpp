@@ -2,11 +2,13 @@
  * @file io/cxx/ImageJpegFile.cc
  * @date Wed Oct 10 16:38:00 2012 +0200
  * @author Laurent El Shafey <laurent.el-shafey@idiap.ch>
+ * @author Manuel Gunther <siebenkopf@googlemail.com>
  *
  * @brief Implements an image format reader/writer using libjpeg.
  * This codec is only able to work with 3D input/output.
  *
  * Copyright (C) 2011-2013 Idiap Research Institute, Martigny, Switzerland
+ * Copyright (c) 2016, Regents of the University of Colorado on behalf of the University of Colorado Colorado Springs.
  */
 
 #ifdef HAVE_LIBJPEG
