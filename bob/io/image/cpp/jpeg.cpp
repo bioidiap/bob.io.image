@@ -319,13 +319,10 @@ bob::io::image::JPEGFile::JPEGFile(const char* path, char mode)
   }
 
   if (mode == 'r' || (mode == 'a' && boost::filesystem::exists(path))) {
-    {
-      im_peek(path, m_type);
-      m_length = 1;
-      m_newfile = false;
-    }
-  }
-  else {
+    im_peek(path, m_type);
+    m_length = 1;
+    m_newfile = false;
+  } else {
     m_length = 0;
     m_newfile = true;
   }

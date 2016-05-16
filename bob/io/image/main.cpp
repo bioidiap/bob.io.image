@@ -17,9 +17,12 @@
 #include "file.h"
 
 #include <bob.extension/documentation.h>
-#include <bob.io.image/jpeg.h>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
+
+#include <bob.io.image/bmp.h>
+#include <bob.io.image/jpeg.h>
+
 
 #ifdef HAVE_LIBJPEG
 #include <jpeglib.h>
@@ -50,20 +53,29 @@ BOB_TRY
   for (int i = 0; i < 3; ++i)
     color_image(i, blitz::Range::all(), blitz::Range::all()) = gray_image(blitz::Range::all(), blitz::Range::all());
 
+  // BMP; only color images are supported
+  boost::filesystem::path bmp_color(tempdir); bmp_color /= std::string("color.bmp");
+  bob::io::image::write_bmp(color_image, bmp_color.string());
+  blitz::Array<uint8_t, 3> color_bmp = bob::io::image::read_bmp<uint8_t>(bmp_color.string());
+
+  if (blitz::any(blitz::abs(color_image - color_bmp) > 0))
+    throw std::runtime_error("BMP color image IO did not succeed, check " + bmp_color.string());
+
 #ifdef HAVE_LIBJPEG
+  // JPEG
   boost::filesystem::path jpeg_gray(tempdir); jpeg_gray /= std::string("gray.jpg");
   bob::io::image::write_jpeg(gray_image, jpeg_gray.string());
   blitz::Array<uint8_t, 2> gray_jpeg = bob::io::image::read_jpeg<uint8_t, 2>(jpeg_gray.string());
 
   if (blitz::any(blitz::abs(gray_image - gray_jpeg) > 10))
-    throw std::runtime_error("Gray image IO did not succeed, check " + jpeg_gray.string());
+    throw std::runtime_error("JPEG gray image IO did not succeed, check " + jpeg_gray.string());
 
   boost::filesystem::path jpeg_color(tempdir); jpeg_color /= std::string("color.jpg");
   bob::io::image::write_jpeg(color_image, jpeg_color.string());
   blitz::Array<uint8_t, 3> color_jpeg = bob::io::image::read_jpeg<uint8_t, 3>(jpeg_color.string());
 
   if (blitz::any(blitz::abs(color_image - color_jpeg) > 10))
-    throw std::runtime_error("Color image IO did not succeed, check " + jpeg_color.string());
+    throw std::runtime_error("JPEG color image IO did not succeed, check " + jpeg_color.string());
 #endif
 
   Py_RETURN_NONE;
