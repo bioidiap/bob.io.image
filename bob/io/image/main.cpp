@@ -28,6 +28,8 @@
 #include <bob.io.image/jpeg.h>
 #include <bob.io.image/gif.h>
 #include <bob.io.image/netpbm.h>
+#include <bob.io.image/png.h>
+#include <bob.io.image/tiff.h>
 
 
 #ifdef HAVE_LIBJPEG
@@ -117,6 +119,41 @@ BOB_TRY
   if (blitz::any(blitz::abs(color_image - color_jpeg) > 10))
     throw std::runtime_error("JPEG color image IO did not succeed, check " + jpeg_color.string());
 #endif
+
+#ifdef HAVE_LIBPNG
+  // PNG
+  boost::filesystem::path png_gray(tempdir); png_gray /= std::string("gray.png");
+  bob::io::image::write_png(gray_image, png_gray.string());
+  blitz::Array<uint8_t, 2> gray_png = bob::io::image::read_png<uint8_t, 2>(png_gray.string());
+
+  if (blitz::any(blitz::abs(gray_image - gray_png) > 1))
+    throw std::runtime_error("JPEG gray image IO did not succeed, check " + png_gray.string());
+
+  boost::filesystem::path png_color(tempdir); png_color /= std::string("color.png");
+  bob::io::image::write_png(color_image, png_color.string());
+  blitz::Array<uint8_t, 3> color_png = bob::io::image::read_png<uint8_t, 3>(png_color.string());
+
+  if (blitz::any(blitz::abs(color_image - color_png) > 1))
+    throw std::runtime_error("JPEG color image IO did not succeed, check " + png_color.string());
+#endif
+
+#ifdef HAVE_LIBTIFF
+  // TIFF
+  boost::filesystem::path tiff_gray(tempdir); tiff_gray /= std::string("gray.tiff");
+  bob::io::image::write_tiff(gray_image, tiff_gray.string());
+  blitz::Array<uint8_t, 2> gray_tiff = bob::io::image::read_tiff<uint8_t, 2>(tiff_gray.string());
+
+  if (blitz::any(blitz::abs(gray_image - gray_tiff) > 1))
+    throw std::runtime_error("JPEG gray image IO did not succeed, check " + tiff_gray.string());
+
+  boost::filesystem::path tiff_color(tempdir); tiff_color /= std::string("color.tiff");
+  bob::io::image::write_tiff(color_image, tiff_color.string());
+  blitz::Array<uint8_t, 3> color_tiff = bob::io::image::read_tiff<uint8_t, 3>(tiff_color.string());
+
+  if (blitz::any(blitz::abs(color_image - color_tiff) > 1))
+    throw std::runtime_error("JPEG color image IO did not succeed, check " + tiff_color.string());
+#endif
+
 
   Py_RETURN_NONE;
 BOB_CATCH_FUNCTION("_test_io", 0)

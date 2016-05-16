@@ -316,7 +316,7 @@ int read_pbm_data(FILE *f, int *img_in, int img_size, int is_ascii, int img_widt
       /* Decode the image contents byte-by-byte. */
       for (k = 0; k < 8; k++) {
         if (i >= img_size) return -1;
-        img_in[i++] = (lum_val >> (7-k)) & 0x1;        
+        img_in[i++] = (lum_val >> (7-k)) & 0x1;
         // fprintf(stderr, "i: %d, %d\n", i, img_in[i]);
         row_position++;
         if (row_position >= img_width) {

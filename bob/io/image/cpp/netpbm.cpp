@@ -21,9 +21,7 @@
 
 #include <bob.io.image/netpbm.h>
 
-extern "C" {
 #include "pnmio.h"
-}
 
 typedef unsigned long sample;
 
