@@ -22,6 +22,7 @@
 
 #include <bob.io.image/bmp.h>
 #include <bob.io.image/jpeg.h>
+#include <bob.io.image/gif.h>
 
 
 #ifdef HAVE_LIBJPEG
@@ -60,6 +61,24 @@ BOB_TRY
 
   if (blitz::any(blitz::abs(color_image - color_bmp) > 0))
     throw std::runtime_error("BMP color image IO did not succeed, check " + bmp_color.string());
+
+
+#ifdef HAVE_LIBGIF
+  // GIF
+  boost::filesystem::path gif_gray(tempdir); gif_gray /= std::string("gray.gif");
+  bob::io::image::write_gif(gray_image, gif_gray.string());
+  blitz::Array<uint8_t, 2> gray_gif = bob::io::image::read_gif<uint8_t, 2>(gif_gray.string());
+
+  if (blitz::any(blitz::abs(gray_image - gray_gif) > 10))
+    throw std::runtime_error("GIF gray image IO did not succeed, check " + gif_gray.string());
+
+  boost::filesystem::path gif_color(tempdir); gif_color /= std::string("color.gif");
+  bob::io::image::write_gif(color_image, gif_color.string());
+  blitz::Array<uint8_t, 3> color_gif = bob::io::image::read_gif<uint8_t, 3>(gif_color.string());
+
+  if (blitz::any(blitz::abs(color_image - color_gif) > 10))
+    throw std::runtime_error("GIF color image IO did not succeed, check " + gif_color.string());
+#endif
 
 #ifdef HAVE_LIBJPEG
   // JPEG
@@ -151,9 +170,11 @@ static PyObject* create_module (void) {
   }
 #endif
 
+#ifdef HAVE_GIFLIB
   if (!PyBobIoCodec_Register(".gif", "GIF (giflib)", &make_gif_file)) {
     PyErr_Print();
   }
+#endif // HAVE_GIFLIB
 
   if (!PyBobIoCodec_Register(".pbm", "PBM, indexed (libnetpbm)",
         &make_netpbm_file)) {

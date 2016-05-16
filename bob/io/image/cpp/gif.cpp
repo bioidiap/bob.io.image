@@ -8,6 +8,8 @@
  * Copyright (C) 2011-2013 Idiap Research Institute, Martigny, Switzerland
  */
 
+#ifdef HAVE_GIFLIB
+
 #include <boost/filesystem.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -17,7 +19,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob.io.base/File.h>
+#include <bob.io.image/gif.h>
 
 extern "C" {
 #include <gif_lib.h>
@@ -564,109 +566,70 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
 }
 
 
-class ImageGifFile: public bob::io::base::File {
+/**
+ * GIF class
+*/
+bob::io::image::GIFFile::GIFFile(const char* path, char mode)
+: m_filename(path),
+  m_newfile(true) {
 
-  public: //api
+  //checks if file exists
+  if (mode == 'r' && !boost::filesystem::exists(path)) {
+    boost::format m("file '%s' is not readable");
+    m % path;
+    throw std::runtime_error(m.str());
+  }
 
-    ImageGifFile(const char* path, char mode):
-      m_filename(path),
-      m_newfile(true) {
+  if (mode == 'r' || (mode == 'a' && boost::filesystem::exists(path))) {
+    im_peek(path, m_type);
+    m_length = 1;
+    m_newfile = false;
+  }
+  else {
+    m_length = 0;
+    m_newfile = true;
+  }
+}
 
-        //checks if file exists
-        if (mode == 'r' && !boost::filesystem::exists(path)) {
-          boost::format m("file '%s' is not readable");
-          m % path;
-          throw std::runtime_error(m.str());
-        }
+void bob::io::image::GIFFile::read(bob::io::base::array::interface& buffer, size_t index) {
+  if (m_newfile)
+    throw std::runtime_error("uninitialized image file cannot be read");
 
-        if (mode == 'r' || (mode == 'a' && boost::filesystem::exists(path))) {
-          {
-            im_peek(path, m_type);
-            m_length = 1;
-            m_newfile = false;
-          }
-        }
-        else {
-          m_length = 0;
-          m_newfile = true;
-        }
+  if (!buffer.type().is_compatible(m_type)) buffer.set(m_type);
 
-      }
+  if (index != 0)
+    throw std::runtime_error("cannot read image with index > 0 -- there is only one image in an image file");
 
-    virtual ~ImageGifFile() { }
+  if(!buffer.type().is_compatible(m_type)) buffer.set(m_type);
+  im_load(m_filename, buffer);
+}
 
-    virtual const char* filename() const {
-      return m_filename.c_str();
-    }
+size_t bob::io::image::GIFFile::append(const bob::io::base::array::interface& buffer) {
+  if (m_newfile) {
+    im_save(m_filename, buffer);
+    m_type = buffer.type();
+    m_newfile = false;
+    m_length = 1;
+    return 0;
+  }
 
-    virtual const bob::io::base::array::typeinfo& type_all() const {
-      return m_type;
-    }
+  throw std::runtime_error("image files only accept a single array");
+}
 
-    virtual const bob::io::base::array::typeinfo& type() const {
-      return m_type;
-    }
+void bob::io::image::GIFFile::write (const bob::io::base::array::interface& buffer) {
+  //overwriting position 0 should always work
+  if (m_newfile) {
+    append(buffer);
+    return;
+  }
 
-    virtual size_t size() const {
-      return m_length;
-    }
+  throw std::runtime_error("image files only accept a single array");
+}
 
-    virtual const char* name() const {
-      return s_codecname.c_str();
-    }
-
-    virtual void read_all(bob::io::base::array::interface& buffer) {
-      read(buffer, 0); ///we only have 1 image in an image file anyways
-    }
-
-    virtual void read(bob::io::base::array::interface& buffer, size_t index) {
-      if (m_newfile)
-        throw std::runtime_error("uninitialized image file cannot be read");
-
-      if (!buffer.type().is_compatible(m_type)) buffer.set(m_type);
-
-      if (index != 0)
-        throw std::runtime_error("cannot read image with index > 0 -- there is only one image in an image file");
-
-      if(!buffer.type().is_compatible(m_type)) buffer.set(m_type);
-      im_load(m_filename, buffer);
-    }
-
-    virtual size_t append (const bob::io::base::array::interface& buffer) {
-      if (m_newfile) {
-        im_save(m_filename, buffer);
-        m_type = buffer.type();
-        m_newfile = false;
-        m_length = 1;
-        return 0;
-      }
-
-      throw std::runtime_error("image files only accept a single array");
-    }
-
-    virtual void write (const bob::io::base::array::interface& buffer) {
-      //overwriting position 0 should always work
-      if (m_newfile) {
-        append(buffer);
-        return;
-      }
-
-      throw std::runtime_error("image files only accept a single array");
-    }
-
-  private: //representation
-    std::string m_filename;
-    bool m_newfile;
-    bob::io::base::array::typeinfo m_type;
-    size_t m_length;
-
-    static std::string s_codecname;
-
-};
-
-
-std::string ImageGifFile::s_codecname = "bob.image_gif";
+std::string bob::io::image::GIFFile::s_codecname = "bob.image_gif";
 
 boost::shared_ptr<bob::io::base::File> make_gif_file (const char* path, char mode) {
-  return boost::make_shared<ImageGifFile>(path, mode);
+  return boost::make_shared<bob::io::image::GIFFile>(path, mode);
 }
+
+#endif // HAVE_GIFLIB
