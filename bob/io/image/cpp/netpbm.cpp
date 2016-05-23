@@ -408,7 +408,7 @@ static void im_save_color(const bob::io::base::array::interface& b, struct pam *
       img_data[c+0] = element_r[y*info.shape[2] + x];
       img_data[c+1] = element_g[y*info.shape[2] + x];
       img_data[c+2] = element_b[y*info.shape[2] + x];
-      c = c + 3;
+      c += 3;
     }
   }
   pnm_writepam(out_pam, img_data);

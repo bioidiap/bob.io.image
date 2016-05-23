@@ -88,14 +88,12 @@ namespace bob { namespace io { namespace image {
 
   };
 
-  template <class T, int N>
-  blitz::Array<T,N> read_gif(const std::string& filename){
+  inline blitz::Array<uint8_t,3> read_gif(const std::string& filename){
     GIFFile gif(filename.c_str(), 'r');
-    return gif.read<T,N>(0);
+    return gif.read<uint8_t,3>(0);
   }
 
-  template <class T, int N>
-  void write_gif(const blitz::Array<T,N>& image, const std::string& filename){
+  inline void write_gif(const blitz::Array<uint8_t,3>& image, const std::string& filename){
     GIFFile gif(filename.c_str(), 'w');
     gif.write(image);
   }

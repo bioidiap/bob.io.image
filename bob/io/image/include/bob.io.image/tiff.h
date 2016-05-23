@@ -88,6 +88,11 @@ namespace bob { namespace io { namespace image {
       static std::string s_codecname;
   };
 
+  bool is_color_tiff(const std::string& filename){
+    TIFFFile tiff(filename.c_str(), 'r');
+    return tiff.type().nd == 3;
+  }
+
   template <class T, int N>
   blitz::Array<T,N> read_tiff(const std::string& filename){
     TIFFFile tiff(filename.c_str(), 'r');

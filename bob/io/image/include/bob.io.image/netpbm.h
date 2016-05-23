@@ -86,6 +86,48 @@ namespace bob { namespace io { namespace image {
 
   };
 
+  template <class T>
+  blitz::Array<T,2> read_pbm(const std::string& filename){
+    NetPBMFile pbm(filename.c_str(), 'r');
+    return pbm.read<T,2>(0);
+  }
+
+  template <class T>
+  void write_pbm(const blitz::Array<T,2>& image, const std::string& filename){
+    NetPBMFile pbm(filename.c_str(), 'w');
+    pbm.write(image);
+  }
+
+  template <class T>
+  blitz::Array<T,2> read_pgm(const std::string& filename){
+    NetPBMFile pgm(filename.c_str(), 'r');
+    return pgm.read<T,2>(0);
+  }
+
+  template <class T>
+  void write_pgm(const blitz::Array<T,2>& image, const std::string& filename){
+    NetPBMFile pgm(filename.c_str(), 'w');
+    pgm.write(image);
+  }
+
+  template <class T>
+  blitz::Array<T,3> read_ppm(const std::string& filename){
+    NetPBMFile ppm(filename.c_str(), 'r');
+    return ppm.read<T,3>(0);
+  }
+
+  template <class T>
+  inline void write_ppm(const blitz::Array<T,3>& image, const std::string& filename){
+    NetPBMFile ppm(filename.c_str(), 'w');
+    ppm.write(image);
+  }
+
+
+  bool is_color_p_m(const std::string& filename){
+    NetPBMFile p_m(filename.c_str(), 'r');
+    return p_m.type().nd == 3;
+  }
+
   template <class T, int N>
   blitz::Array<T,N> read_p_m(const std::string& filename){
     NetPBMFile p_m(filename.c_str(), 'r');
@@ -97,6 +139,7 @@ namespace bob { namespace io { namespace image {
     NetPBMFile p_m(filename.c_str(), 'w');
     p_m.write(image);
   }
+
 
 }}}
 

@@ -88,14 +88,19 @@ namespace bob { namespace io { namespace image {
       static std::string s_codecname;
   };
 
-  template <class T, int N>
-  blitz::Array<T,N> read_jpeg(const std::string& filename){
+  bool is_color_jpeg(const std::string& filename){
     JPEGFile jpeg(filename.c_str(), 'r');
-    return jpeg.read<T,N>(0);
+    return jpeg.type().nd == 3;
   }
 
-  template <class T, int N>
-  void write_jpeg(const blitz::Array<T,N>& image, const std::string& filename){
+  template <int N>
+  blitz::Array<uint8_t,N> read_jpeg(const std::string& filename){
+    JPEGFile jpeg(filename.c_str(), 'r');
+    return jpeg.read<uint8_t,N>(0);
+  }
+
+  template <int N>
+  void write_jpeg(const blitz::Array<uint8_t,N>& image, const std::string& filename){
     JPEGFile jpeg(filename.c_str(), 'w');
     jpeg.write(image);
   }

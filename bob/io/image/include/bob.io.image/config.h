@@ -89,7 +89,7 @@
    */
 #ifdef HAVE_GIFLIB
   static PyObject* giflib_version() {
-  #ifdef GIF_LIB_VERSION
+  #ifdef GIFLIB_VERSION
    return Py_BuildValue("s", GIF_LIB_VERSION);
   #else
     boost::format f("%s.%s.%s");

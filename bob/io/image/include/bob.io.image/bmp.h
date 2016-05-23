@@ -86,14 +86,12 @@ namespace bob { namespace io { namespace image {
 
   };
 
-  template <class T>
-  blitz::Array<T,3> read_bmp(const std::string& filename){
+  inline blitz::Array<uint8_t,3> read_bmp(const std::string& filename){
     BMPFile bmp(filename.c_str(), 'r');
-    return bmp.read<T,3>(0);
+    return bmp.read<uint8_t,3>(0);
   }
 
-  template <class T>
-  void write_bmp(const blitz::Array<T,3>& image, const std::string& filename){
+  inline void write_bmp(const blitz::Array<uint8_t,3>& image, const std::string& filename){
     BMPFile bmp(filename.c_str(), 'w');
     bmp.write(image);
   }
