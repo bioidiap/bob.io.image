@@ -111,7 +111,7 @@ class jpeg:
     candidates = find_library(module, version=self.version, prefixes=[prefix], only_static=only_static)
 
     if not candidates:
-      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
+      raise RuntimeError("cannot find required %s binary module `%s' - make sure `%s' is installed on `%s'" % (self.name, module, self.name, prefix))
 
     # libraries
     self.libraries = []
@@ -207,7 +207,7 @@ class tiff:
     candidates = find_library(module, version=self.version, prefixes=[prefix], only_static=only_static)
 
     if not candidates:
-      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
+      raise RuntimeError("cannot find required %s binary module `%s' - make sure `%s' is installed on `%s'" % (self.name, module, self.name, prefix))
 
     # libraries
     self.libraries = []
@@ -309,7 +309,7 @@ class gif:
     candidates = find_library(module, version=self.version, prefixes=[prefix], only_static=only_static)
 
     if not candidates:
-      raise RuntimeError("cannot find required %s binary module `%s' - make sure libsvm is installed on `%s'" % (self.name, module, prefix))
+      raise RuntimeError("cannot find required %s binary module `%s' - make sure `%s' is installed on `%s'" % (self.name, module, self.name, prefix))
 
     # libraries
     self.libraries = []
