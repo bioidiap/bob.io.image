@@ -18,12 +18,14 @@ to read and write images using its native API (:py:func:`bob.io.base.load` and
 
 At present, this plugin provides support for the following types of images:
 
-* TIFF
-* JPEG
-* GIF
-* PNG
-* BMP
-* Netpbm images (PGM, PPM, PBM)
+* TIFF (gray and color)
+* JPEG (gray and color)
+* GIF (color only)
+* PNG (gray and color)
+* BMP (color only)
+* Netpbm images (binary - PBM, gray - PGM, color - PPM)
+
+Additionally, we provide the pure C++ interface to read and write these kind of images, see :doc:`cpp_api`.
 
 Documentation
 -------------
@@ -33,6 +35,7 @@ Documentation
 
    guide
    py_api
+   cpp_api
 
 Indices and tables
 ------------------

@@ -2,10 +2,12 @@
  * @file io/cxx/ImageBmpFile.cc
  * @date Wed Nov 28 15:36:00 2012 +0200
  * @author Laurent El Shafey <laurent.el-shafey@idiap.ch>
+ * @author Manuel Gunther <siebenkopf@googlemail.com>
  *
  * @brief Implements an image format reader/writer for BMP files.
  *
  * Copyright (C) 2011-2013 Idiap Research Institute, Martigny, Switzerland
+ * Copyright (c) 2016, Regents of the University of Colorado on behalf of the University of Colorado Colorado Springs.
  */
 
 #include <boost/filesystem.hpp>
@@ -17,7 +19,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
-#include <bob.io.base/File.h>
+#include <bob.io.image/bmp.h>
 
 // The following documentation is mostly coming from wikipedia:
 // http://en.wikipedia.org/wiki/BMP_file_format
@@ -918,120 +920,81 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
       im_save_color(array, out_file.get());
     }
     else {
-      boost::format m("the image in file `%s' has a number of dimensions for which this bmp codec has no support for: %s");
+      boost::format m("the image in file `%s' has a number of dimensions for which this bmp codec has no support for");
       m % info.str();
       throw std::runtime_error(m.str());
     }
   }
   else {
-    boost::format m("the image in file `%s' has a data type this bmp codec has no support for: %s");
+    boost::format m("the image in file `%s' has a data type this bmp codec has no support for");
     m % info.str();
     throw std::runtime_error(m.str());
   }
 }
 
-class ImageBmpFile: public bob::io::base::File {
+/**
+ * BMP class
+*/
+bob::io::image::BMPFile::BMPFile(const char* path, char mode)
+: m_filename(path),
+  m_newfile(true)
+{
+  //checks if file exists
+  if (mode == 'r' && !boost::filesystem::exists(path)) {
+    boost::format m("file '%s' is not readable");
+    m % path;
+    throw std::runtime_error(m.str());
+  }
 
-  public: //api
+  if (mode == 'r' || (mode == 'a' && boost::filesystem::exists(path))) {
+    im_peek(path, m_type);
+    m_length = 1;
+    m_newfile = false;
+  } else {
+    m_length = 0;
+    m_newfile = true;
+  }
+}
 
-    ImageBmpFile(const char* path, char mode):
-      m_filename(path),
-      m_newfile(true) {
+void bob::io::image::BMPFile::read(bob::io::base::array::interface& buffer, size_t index) {
+  if (m_newfile)
+    throw std::runtime_error("uninitialized image file cannot be read");
 
-        //checks if file exists
-        if (mode == 'r' && !boost::filesystem::exists(path)) {
-          boost::format m("file '%s' is not readable");
-          m % path;
-          throw std::runtime_error(m.str());
-        }
+  if (!buffer.type().is_compatible(m_type)) buffer.set(m_type);
 
-        if (mode == 'r' || (mode == 'a' && boost::filesystem::exists(path))) {
-          {
-            im_peek(path, m_type);
-            m_length = 1;
-            m_newfile = false;
-          }
-        }
-        else {
-          m_length = 0;
-          m_newfile = true;
-        }
+  if (index != 0)
+    throw std::runtime_error("cannot read image with index > 0 -- there is only one image in an image file");
 
-      }
+  if(!buffer.type().is_compatible(m_type)) buffer.set(m_type);
+  im_load(m_filename, buffer);
+}
 
-    virtual ~ImageBmpFile() { }
+size_t bob::io::image::BMPFile::append(const bob::io::base::array::interface& buffer) {
+  if (m_newfile) {
+    im_save(m_filename, buffer);
+    m_type = buffer.type();
+    m_newfile = false;
+    m_length = 1;
+    return 0;
+  }
 
-    virtual const char* filename() const {
-      return m_filename.c_str();
-    }
+  throw std::runtime_error("image files only accept a single array");
+}
 
-    virtual const bob::io::base::array::typeinfo& type_all() const {
-      return m_type;
-    }
+void bob::io::image::BMPFile::write(const bob::io::base::array::interface& buffer) {
+  //overwriting position 0 should always work
+  if (m_newfile) {
+    append(buffer);
+    return;
+  }
 
-    virtual const bob::io::base::array::typeinfo& type() const {
-      return m_type;
-    }
+  throw std::runtime_error("image files only accept a single array");
+}
 
-    virtual size_t size() const {
-      return m_length;
-    }
 
-    virtual const char* name() const {
-      return s_codecname.c_str();
-    }
 
-    virtual void read_all(bob::io::base::array::interface& buffer) {
-      read(buffer, 0); ///we only have 1 image in an image file anyways
-    }
-
-    virtual void read(bob::io::base::array::interface& buffer, size_t index) {
-      if (m_newfile)
-        throw std::runtime_error("uninitialized image file cannot be read");
-
-      if (!buffer.type().is_compatible(m_type)) buffer.set(m_type);
-
-      if (index != 0)
-        throw std::runtime_error("cannot read image with index > 0 -- there is only one image in an image file");
-
-      if(!buffer.type().is_compatible(m_type)) buffer.set(m_type);
-      im_load(m_filename, buffer);
-    }
-
-    virtual size_t append (const bob::io::base::array::interface& buffer) {
-      if (m_newfile) {
-        im_save(m_filename, buffer);
-        m_type = buffer.type();
-        m_newfile = false;
-        m_length = 1;
-        return 0;
-      }
-
-      throw std::runtime_error("image files only accept a single array");
-    }
-
-    virtual void write (const bob::io::base::array::interface& buffer) {
-      //overwriting position 0 should always work
-      if (m_newfile) {
-        append(buffer);
-        return;
-      }
-
-      throw std::runtime_error("image files only accept a single array");
-    }
-
-  private: //representation
-    std::string m_filename;
-    bool m_newfile;
-    bob::io::base::array::typeinfo m_type;
-    size_t m_length;
-
-    static std::string s_codecname;
-
-};
-
-std::string ImageBmpFile::s_codecname = "bob.image_bmp";
+std::string bob::io::image::BMPFile::s_codecname = "bob.image_bmp";
 
 boost::shared_ptr<bob::io::base::File> make_bmp_file (const char* path, char mode) {
-  return boost::make_shared<ImageBmpFile>(path, mode);
+  return boost::make_shared<bob::io::image::BMPFile>(path, mode);
 }

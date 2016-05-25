@@ -32,7 +32,9 @@
  * file using a specific backend.
  */
 boost::shared_ptr<bob::io::base::File> make_tiff_file (const char* path, char mode);
+#ifdef HAVE_LIBJPEG
 boost::shared_ptr<bob::io::base::File> make_jpeg_file (const char* path, char mode);
+#endif
 boost::shared_ptr<bob::io::base::File> make_gif_file (const char* path, char mode);
 boost::shared_ptr<bob::io::base::File> make_netpbm_file (const char* path, char mode);
 boost::shared_ptr<bob::io::base::File> make_png_file (const char* path, char mode);

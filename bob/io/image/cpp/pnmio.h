@@ -1,6 +1,6 @@
 /*
  * File       : pnmio.h
- * Description: Header file for pnmio.c.
+ * Description: Header file for pnmio.cpp.
  * Author     : Nikolaos Kavvadias <nikolaos.kavvadias@gmail.com>
  * Copyright  : (C) Nikolaos Kavvadias 2012, 2013, 2014, 2015, 2016
  * Website    : http://www.nkavvadias.com
