@@ -69,12 +69,12 @@ def get_macros():
   from bob.extension.utils import find_header, uniq_paths
   from bob.extension import pkgconfig
   macros = []
-  for define, header in (('LIBJPEG', 'jpeglib.h'), ('LIBTIFF', 'tiff.h'), ('GIFLIB', 'gif_lib.h')):
+  for define, header in (('HAVE_LIBJPEG', 'jpeglib.h'), ('HAVE_LIBTIFF', 'tiff.h'), ('HAVE_GIFLIB', 'gif_lib.h')):
     # locate pkg-config on our own
     candidates = find_header(header)
     if candidates:
       macros.append((define, '1'))
-  for define, name in (("LIBPNG", "libpng"),):
+  for define, name in (("HAVE_LIBPNG", "libpng"),):
     try:
       pkg = pkgconfig(name)
       macros.append((define, '1'))
