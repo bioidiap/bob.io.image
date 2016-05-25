@@ -45,9 +45,42 @@ def get_include_directories():
 
     directories.append(os.path.dirname(candidates[0]))
   for name in ("libpng",):
-    pkg = pkgconfig(name)
-    directories.extend(pkg.include_directories())
+    try:
+      pkg = pkgconfig(name)
+      directories.extend(pkg.include_directories())
+    except:
+      pass
   return uniq_paths(directories)
+
+
+def get_macros():
+  """get_macros() -> macros
+
+  Returns a list of preprocessor macros, such as ``(HAVE_LIBJPEG, 1)``.
+  This function is automatically used by :py:func:`bob.extension.get_bob_libraries` to retrieve the prerpocessor definitions that are required to use the C bindings of this library in dependent classes.
+  You shouldn't normally need to call this function by hand.
+
+  **Returns:**
+
+  ``macros`` : [str]
+    The list of preprocessor macros required to use the C bindings of this class.
+  """
+  # try to use pkg_config first
+  from bob.extension.utils import find_header, uniq_paths
+  from bob.extension import pkgconfig
+  macros = []
+  for define, header in (('LIBJPEG', 'jpeglib.h'), ('LIBTIFF', 'tiff.h'), ('GIFLIB', 'gif_lib.h')):
+    # locate pkg-config on our own
+    candidates = find_header(header)
+    if candidates:
+      macros.append((define, '1'))
+  for define, name in (("LIBPNG", "libpng"),):
+    try:
+      pkg = pkgconfig(name)
+      macros.append((define, '1'))
+    except:
+      pass
+  return macros
 
 
 # gets sphinx autodoc done right - don't remove it
