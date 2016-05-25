@@ -9,6 +9,43 @@
 The C++ API of ``bob.io.image`` allows users to read and write images in different file formats.
 For all image tyres, there exist two functions for reading and writing image, a function to peek the color information (if applicable) and a C++ class that can be used for more detailed information about the image.
 
+Generic functions
+-----------------
+
+These functions read and write images based on the filename extension.
+Currently, only ``uint8_t`` data type is supported (because this data type is supported by all of our codes).
+For other data types, please use the specialized functions as described below.
+
+.. code-block: cpp
+
+   #include <bob.io.image/image.h>
+
+.. cpp:function:: bool bob::io::image::is_color_image(const std::string& filename)
+
+   Returns ``true`` if the image with the given name is a color image, else ``false``.
+   It might raise an exception if the extension is not supported.
+
+.. cpp:function:: blitz::Array<uint8_t,2> bob::io::image::read_gray_image(const std::string& filename)
+
+   Reads a gray image.
+   It might raise an exception if the extension is not supported.
+
+.. cpp:function:: blitz::Array<uint8_t,3> bob::io::image::read_color_image(const std::string& filename)
+
+   Reads a color image.
+   It might raise an exception if the extension is not supported.
+
+.. cpp:function:: void bob::io::image::write_gray_image(const blitz::Array<uint8_t,2>& image, const std::string& filename)
+
+   Writes the gray ``image``.
+   If the file exists, it will be overwritten.
+
+.. cpp:function:: void bob::io::image::write_color_image(const blitz::Array<uint8_t,3>& image, const std::string& filename)
+
+   Writes the color ``image``.
+   If the file exists, it will be overwritten.
+
+
 BMP
 ---
 

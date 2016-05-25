@@ -24,12 +24,7 @@
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 
-#include <bob.io.image/bmp.h>
-#include <bob.io.image/jpeg.h>
-#include <bob.io.image/gif.h>
-#include <bob.io.image/netpbm.h>
-#include <bob.io.image/png.h>
-#include <bob.io.image/tiff.h>
+#include <bob.io.image/image.h>
 
 
 #ifdef HAVE_LIBJPEG
@@ -63,9 +58,9 @@ BOB_TRY
 
   // BMP; only color images are supported
   boost::filesystem::path bmp(tempdir); bmp /= std::string("color.bmp");
-  bob::io::image::write_bmp(color_image, bmp.string());
+  bob::io::image::write_color_image(color_image, bmp.string());
 
-  blitz::Array<uint8_t, 3> color_bmp = bob::io::image::read_bmp(bmp.string());
+  blitz::Array<uint8_t, 3> color_bmp = bob::io::image::read_color_image(bmp.string());
   if (blitz::any(blitz::abs(color_image - color_bmp) > 0))
     throw std::runtime_error("BMP image IO did not succeed, check " + bmp.string());
 
@@ -73,29 +68,29 @@ BOB_TRY
 #ifdef HAVE_GIFLIB
   // GIF; only color images are supported
   boost::filesystem::path gif(tempdir); gif /= std::string("color.gif");
-  bob::io::image::write_gif(color_image, gif.string());
+  bob::io::image::write_color_image(color_image, gif.string());
 
-  blitz::Array<uint8_t, 3> color_gif = bob::io::image::read_gif(gif.string());
+  blitz::Array<uint8_t, 3> color_gif = bob::io::image::read_color_image(gif.string());
   if (blitz::any(blitz::abs(color_image - color_gif) > 8)) // TODO: why is GIF not lossless?
     throw std::runtime_error("GIF image IO did not succeed, check " + gif.string());
 #endif
 
   // NetPBM
   boost::filesystem::path pgm(tempdir); pgm /= std::string("gray.pgm");
-  bob::io::image::write_pgm(gray_image, pgm.string());
+  bob::io::image::write_gray_image(gray_image, pgm.string());
   if (bob::io::image::is_color_p_m(pgm.string()))
     throw std::runtime_error("PGM image " + pgm.string() + " is not gray as expected");
 
-  blitz::Array<uint8_t, 2> gray_pgm = bob::io::image::read_pgm<uint8_t>(pgm.string());
+  blitz::Array<uint8_t, 2> gray_pgm = bob::io::image::read_gray_image(pgm.string());
   if (blitz::any(blitz::abs(gray_image - gray_pgm) > 0))
     throw std::runtime_error("PGM image IO did not succeed, check " + pgm.string());
 
   boost::filesystem::path ppm(tempdir); ppm /= std::string("color.ppm");
-  bob::io::image::write_ppm(color_image, ppm.string());
+  bob::io::image::write_color_image(color_image, ppm.string());
   if (!bob::io::image::is_color_p_m(ppm.string()))
     throw std::runtime_error("PPM image " + ppm.string() + " is not color as expected");
 
-  blitz::Array<uint8_t, 3> color_ppm = bob::io::image::read_ppm<uint8_t>(ppm.string());
+  blitz::Array<uint8_t, 3> color_ppm = bob::io::image::read_color_image(ppm.string());
   if (blitz::any(blitz::abs(color_image - color_ppm) > 0))
     throw std::runtime_error("PPM image IO did not succeed, check " + ppm.string());
 
@@ -103,20 +98,20 @@ BOB_TRY
 #ifdef HAVE_LIBJPEG
   // JPEG
   boost::filesystem::path jpeg_gray(tempdir); jpeg_gray /= std::string("gray.jpg");
-  bob::io::image::write_jpeg(gray_image, jpeg_gray.string());
-  if (bob::io::image::is_color_jpeg(jpeg_gray.string()))
+  bob::io::image::write_gray_image(gray_image, jpeg_gray.string());
+  if (bob::io::image::is_color_image(jpeg_gray.string()))
     throw std::runtime_error("JPEG image " + jpeg_gray.string() + " is not gray as expected");
 
-  blitz::Array<uint8_t, 2> gray_jpeg = bob::io::image::read_jpeg<2>(jpeg_gray.string());
+  blitz::Array<uint8_t, 2> gray_jpeg = bob::io::image::read_gray_image(jpeg_gray.string());
   if (blitz::any(blitz::abs(gray_image - gray_jpeg) > 10))
     throw std::runtime_error("JPEG gray image IO did not succeed, check " + jpeg_gray.string());
 
   boost::filesystem::path jpeg_color(tempdir); jpeg_color /= std::string("color.jpg");
-  bob::io::image::write_jpeg(color_image, jpeg_color.string());
-  if (!bob::io::image::is_color_jpeg(jpeg_color.string()))
+  bob::io::image::write_color_image(color_image, jpeg_color.string());
+  if (!bob::io::image::is_color_image(jpeg_color.string()))
     throw std::runtime_error("JPEG image " + jpeg_color.string() + " is not color as expected");
 
-  blitz::Array<uint8_t, 3> color_jpeg = bob::io::image::read_jpeg<3>(jpeg_color.string());
+  blitz::Array<uint8_t, 3> color_jpeg = bob::io::image::read_color_image(jpeg_color.string());
   if (blitz::any(blitz::abs(color_image - color_jpeg) > 10))
     throw std::runtime_error("JPEG color image IO did not succeed, check " + jpeg_color.string());
 #endif
@@ -124,20 +119,20 @@ BOB_TRY
 #ifdef HAVE_LIBPNG
   // PNG
   boost::filesystem::path png_gray(tempdir); png_gray /= std::string("gray.png");
-  bob::io::image::write_png(gray_image, png_gray.string());
-  if (bob::io::image::is_color_png(png_gray.string()))
+  bob::io::image::write_gray_image(gray_image, png_gray.string());
+  if (bob::io::image::is_color_image(png_gray.string()))
     throw std::runtime_error("PNG image " + png_gray.string() + " is not gray as expected");
 
-  blitz::Array<uint8_t, 2> gray_png = bob::io::image::read_png<uint8_t, 2>(png_gray.string());
+  blitz::Array<uint8_t, 2> gray_png = bob::io::image::read_gray_image(png_gray.string());
   if (blitz::any(blitz::abs(gray_image - gray_png) > 1))
     throw std::runtime_error("PNG gray image IO did not succeed, check " + png_gray.string());
 
   boost::filesystem::path png_color(tempdir); png_color /= std::string("color.png");
-  bob::io::image::write_png(color_image, png_color.string());
+  bob::io::image::write_color_image(color_image, png_color.string());
   if (!bob::io::image::is_color_png(png_color.string()))
     throw std::runtime_error("PNG image " + png_color.string() + " is not color as expected");
 
-  blitz::Array<uint8_t, 3> color_png = bob::io::image::read_png<uint8_t, 3>(png_color.string());
+  blitz::Array<uint8_t, 3> color_png = bob::io::image::read_color_image(png_color.string());
   if (blitz::any(blitz::abs(color_image - color_png) > 1))
     throw std::runtime_error("PNG color image IO did not succeed, check " + png_color.string());
 #endif
@@ -145,24 +140,23 @@ BOB_TRY
 #ifdef HAVE_LIBTIFF
   // TIFF
   boost::filesystem::path tiff_gray(tempdir); tiff_gray /= std::string("gray.tiff");
-  bob::io::image::write_tiff(gray_image, tiff_gray.string());
-  if (bob::io::image::is_color_tiff(tiff_gray.string()))
+  bob::io::image::write_gray_image(gray_image, tiff_gray.string());
+  if (bob::io::image::is_color_image(tiff_gray.string()))
     throw std::runtime_error("TIFF image " + tiff_gray.string() + " is not gray as expected");
 
-  blitz::Array<uint8_t, 2> gray_tiff = bob::io::image::read_tiff<uint8_t, 2>(tiff_gray.string());
+  blitz::Array<uint8_t, 2> gray_tiff = bob::io::image::read_gray_image(tiff_gray.string());
   if (blitz::any(blitz::abs(gray_image - gray_tiff) > 1))
     throw std::runtime_error("TIFF gray image IO did not succeed, check " + tiff_gray.string());
 
   boost::filesystem::path tiff_color(tempdir); tiff_color /= std::string("color.tiff");
-  bob::io::image::write_tiff(color_image, tiff_color.string());
-  if (!bob::io::image::is_color_tiff(tiff_color.string()))
+  bob::io::image::write_color_image(color_image, tiff_color.string());
+  if (!bob::io::image::is_color_image(tiff_color.string()))
     throw std::runtime_error("TIFF image " + tiff_color.string() + " is not color as expected");
 
-  blitz::Array<uint8_t, 3> color_tiff = bob::io::image::read_tiff<uint8_t, 3>(tiff_color.string());
+  blitz::Array<uint8_t, 3> color_tiff = bob::io::image::read_color_image(tiff_color.string());
   if (blitz::any(blitz::abs(color_image - color_tiff) > 1))
     throw std::runtime_error("TIFF color image IO did not succeed, check " + tiff_color.string());
 #endif
-
 
   Py_RETURN_NONE;
 BOB_CATCH_FUNCTION("_test_io", 0)
