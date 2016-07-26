@@ -48,7 +48,7 @@ BOB_TRY
   blitz::Array<uint8_t, 2> gray_image(100, 100);
   gray_image = 0;
   for (int i = 0; i < 100; ++i){
-    gray_image(i, 100-i) = 127;
+    gray_image(i, 99-i) = 127;
     gray_image(i,i) = 255;
   }
 
