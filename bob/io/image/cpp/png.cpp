@@ -256,6 +256,7 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
     png_set_expand_gray_1_2_4_to_8(png_ptr);
   else if(color_type == PNG_COLOR_TYPE_PALETTE)
     png_set_palette_to_rgb(png_ptr);
+
   // We currently only support grayscale and rgb images
   if(color_type != PNG_COLOR_TYPE_GRAY &&
      color_type != PNG_COLOR_TYPE_RGB &&
@@ -267,6 +268,12 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
   // 7. Read content
   const bob::io::base::array::typeinfo& info = b.type();
   bool has_alpha = (color_type & PNG_COLOR_MASK_ALPHA) == PNG_COLOR_MASK_ALPHA;
+  // Handle tRNS color type
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)){
+    // old tRNS structure, with 8 bit palette including alpha channel
+    png_set_tRNS_to_alpha(png_ptr);
+    has_alpha = true;
+  }
   if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 2) im_load_gray<uint8_t>(png_ptr, b);
     else if( info.nd == 3) im_load_color<uint8_t>(png_ptr, b, has_alpha);
