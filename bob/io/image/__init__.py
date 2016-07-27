@@ -18,6 +18,45 @@ def get_config():
   return bob.extension.get_config(__name__, version.externals)
 
 
+def load(filename, extension=None):
+  """load(filename) -> image
+
+  This function loads and image from the file with the specified ``filename``.
+  The type of the image will be determined based on the ``extension`` parameter, which can have the following values:
+
+  - ``None``: The file name extension of the ``filename`` is used to determine the image type.
+  - ``'auto'``: The type of the image will be detected automatically, using the :py:mod:`imghdr` module.
+  - ``'.xxx`'': The image type is determined by the given extension.
+                For a list of possible extensions, see :py:func:`bob.io.base.extensions` (only the image extensions are valid here).
+
+  **Parameters:**
+
+  ``filename`` : str
+    The name of the image file to load.
+
+  ``extension`` : str
+    [Default: ``None``] If given, the given extension will determine the type of the image.
+    Use ``'auto'`` to automatically determine the extension (this might take slightly more time).
+
+  **Returns**
+
+  ``image`` : 2D or 3D :py:class:`numpy.ndarray` of type ``uint8``
+    The image read from the specified file.
+  """
+  # check the extension
+  if extension is None:
+    f = bob.io.base.File(filename, 'r')
+  else:
+    if extension == 'auto':
+      import imghdr
+      extension = "." + imghdr.what(filename)
+    f = bob.io.base.File(filename, 'r', extension)
+
+  return f.read()
+
+# use the same alias as for bob.io.base.load
+read = load
+
 def get_include_directories():
   """get_include_directories() -> includes
 

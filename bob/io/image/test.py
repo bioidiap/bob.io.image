@@ -11,6 +11,8 @@
 import os
 import numpy
 from bob.io.base import load, write, test_utils
+import bob.io.image
+import nose
 
 # These are some global parameters for the test.
 PNG_INDEXED_COLOR = test_utils.datafile('img_indexed_color.png', __name__)
@@ -65,6 +67,24 @@ def test_netpbm():
   transcode(test_utils.datafile('test_2.ppm', __name__))  # indexed, works fine
   # transcode(test_utils.datafile('test.jpg', __name__)) #does not work
   # because of re-compression
+
+
+def test_image_load():
+  # test that the generic bob.io.image.load function works as expected
+  for filename in ('test.jpg', 'test.pbm', 'test.pgm', 'test.ppm', 'img_rgba_color.png'):
+    full_file = test_utils.datafile(filename, __name__)
+    # load with just image name
+    i1 = bob.io.image.load(full_file)
+    # load with image name and extension
+    i2 = bob.io.image.load(full_file, os.path.splitext(full_file)[1])
+    assert numpy.array_equal(i1,i2)
+    # load with image name and automatically estimated extension
+    i3 = bob.io.image.load(full_file, 'auto')
+    assert numpy.array_equal(i1,i3)
+
+    # assert that unknown extensions raise exceptions
+    nose.tools.assert_raises(RuntimeError, lambda x: bob.io.image.load(x, ".unknown"), full_file)
+
 
 
 def test_cpp_interface():
