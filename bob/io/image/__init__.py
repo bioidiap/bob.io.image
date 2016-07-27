@@ -17,6 +17,12 @@ def get_config():
   import bob.extension
   return bob.extension.get_config(__name__, version.externals)
 
+# fix imghdr's jpeg detection to use the first two bytes (according to https://en.wikipedia.org/wiki/List_of_file_signatures)
+import imghdr
+def _test_jpeg(h, f):
+    if h.startswith('\xff\xd8'):
+        return "jpeg"
+imghdr.tests.append(_test_jpeg)
 
 def load(filename, extension=None):
   """load(filename) -> image
@@ -48,8 +54,10 @@ def load(filename, extension=None):
     f = bob.io.base.File(filename, 'r')
   else:
     if extension == 'auto':
-      import imghdr
-      extension = "." + imghdr.what(filename)
+      extension = imghdr.what(filename)
+      if extension is None:
+	raise IOError("Could not detect the image type of file %s" % filename)
+      extension = "." + extension
     f = bob.io.base.File(filename, 'r', extension)
 
   return f.read()
