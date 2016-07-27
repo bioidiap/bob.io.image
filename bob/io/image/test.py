@@ -14,25 +14,47 @@ from bob.io.base import load, write, test_utils
 
 # These are some global parameters for the test.
 PNG_INDEXED_COLOR = test_utils.datafile('img_indexed_color.png', __name__)
+PNG_INDEXED_COLOR_ALPHA = test_utils.datafile('img_indexed_color_alpha.png', __name__)
 PNG_RGBA_COLOR = test_utils.datafile('img_rgba_color.png', __name__)
+PNG_GRAY_ALPHA = test_utils.datafile('img_gray_alpha.png', __name__)
+PNG_tRNS = test_utils.datafile('img_trns.png', __name__)
 
 
 def test_png_indexed_color():
-
   # Read an indexed color PNG image, and compared with hardcoded values
   img = load(PNG_INDEXED_COLOR)
   assert img.shape == (3, 22, 32)
   assert img[0, 0, 0] == 255
   assert img[0, 17, 17] == 117
 
-
 def test_png_rgba_color():
-
   # Read an indexed color PNG image, and compared with hardcoded values
   img = load(PNG_RGBA_COLOR)
   assert img.shape == (3, 22, 32)
   assert img[0, 0, 0] == 255
   assert img[0, 17, 17] == 117
+
+def test_png_indexed_color_alpha():
+  # Read an indexed color+alpha PNG image, and compared with hardcoded values
+  img = load(PNG_INDEXED_COLOR_ALPHA)
+  assert img.shape == (3,22,32)
+  assert img[0,0,0] == 255
+  assert img[0,17,17] == 117
+
+def test_png_indexed_trns():
+  # Read an tRNS PNG image (without alpha), and compared with hardcoded values
+  img = load(PNG_tRNS)
+  assert img.shape == (3,22,32)
+  assert img[0,0,0] == 255
+  assert img[0,17,17] == 117
+
+def test_png_gray_alpha():
+  # Read a gray+alpha PNG image, and compared with hardcoded values
+  img = load(PNG_GRAY_ALPHA)
+  assert img.shape == (22,32)
+  assert img[0,0] == 255
+  assert img[17,17] == 51
+
 
 
 def transcode(filename):
