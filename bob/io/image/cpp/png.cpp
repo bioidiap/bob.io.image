@@ -99,13 +99,7 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
 
   // Set depth and number of dimensions
   info.dtype = (bit_depth <= 8 ? bob::io::base::array::t_uint8 : bob::io::base::array::t_uint16);
-  if(color_type == PNG_COLOR_TYPE_GRAY)
-    info.nd = 2;
-  else if (color_type == PNG_COLOR_TYPE_RGB || PNG_COLOR_TYPE_RGB_ALPHA || PNG_COLOR_TYPE_PALETTE)
-    info.nd = 3;
-  else {// Unsupported color type
-    throw std::runtime_error("PNG: codec does not support images with color spaces different than GRAY, RGB, RGBA or Indexed colors (Palette)");
-  }
+  info.nd = color_type & PNG_COLOR_MASK_COLOR ? 3 : 2;
   if(info.nd == 2)
   {
     info.shape[0] = height;
@@ -149,18 +143,18 @@ void im_load_gray(png_structp png_ptr, bob::io::base::array::interface& b)
 }
 
 template <typename T> static
-void imbuffer_to_rgb(const size_t size, const T* im, T* r, T* g, T* b, const size_t number_of_elements)
+void imbuffer_to_rgb(const size_t size, const T* im, T* r, T* g, T* b)
 {
   for(size_t k=0; k<size; ++k)
   {
-    r[k] = im[number_of_elements*k];
-    g[k] = im[number_of_elements*k +1];
-    b[k] = im[number_of_elements*k +2];
+    *r++ = *im++;
+    *g++ = *im++;
+    *b++ = *im++;
   }
 }
 
 template <typename T> static
-void im_load_color(png_structp png_ptr, bob::io::base::array::interface& b, bool has_alpha)
+void im_load_color(png_structp png_ptr, bob::io::base::array::interface& b)
 {
   const bob::io::base::array::typeinfo& info = b.type();
   const size_t height = info.shape[1];
@@ -168,10 +162,8 @@ void im_load_color(png_structp png_ptr, bob::io::base::array::interface& b, bool
   const size_t frame_size = height * width;
   const size_t row_color_stride = width;
 
-  const size_t number_of_elements = has_alpha ? 4 : 3;
-
   // Allocate array to contains a row of RGB-like pixels
-  boost::shared_array<T> row(new T[number_of_elements*width]);
+  boost::shared_array<T> row(new T[3*width]);
   png_bytep row_pointer = reinterpret_cast<png_bytep>(row.get());
 
 #ifdef PNG_READ_INTERLACING_SUPPORTED
@@ -195,7 +187,7 @@ void im_load_color(png_structp png_ptr, bob::io::base::array::interface& b, bool
     for(size_t y=0; y<height; ++y)
     {
       png_read_row(png_ptr, row_pointer, NULL);
-      imbuffer_to_rgb(row_color_stride, reinterpret_cast<T*>(row_pointer), element_r, element_g, element_b, number_of_elements);
+      imbuffer_to_rgb(row_color_stride, reinterpret_cast<T*>(row_pointer), element_r, element_g, element_b);
       element_r += row_color_stride;
       element_g += row_color_stride;
       element_b += row_color_stride;
@@ -256,20 +248,28 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
     png_set_expand_gray_1_2_4_to_8(png_ptr);
   else if(color_type == PNG_COLOR_TYPE_PALETTE)
     png_set_palette_to_rgb(png_ptr);
-  // We currently only support grayscale and rgb images
-  if(color_type != PNG_COLOR_TYPE_GRAY &&
-     color_type != PNG_COLOR_TYPE_RGB &&
-     color_type != PNG_COLOR_TYPE_PALETTE &&
-     color_type != PNG_COLOR_TYPE_RGB_ALPHA) {
-    throw std::runtime_error("PNG: codec does not support images with color spaces different than GRAY, RGB, RGBA or Indexed colors (Palette)");
+  // skip the alpha channel
+  if ((color_type & PNG_COLOR_MASK_ALPHA) || png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+    png_set_strip_alpha(png_ptr);
+
+  // Check color type
+  switch (color_type){
+    // I think that should be all, but in case a new version comes up with a different color space...
+    case PNG_COLOR_TYPE_GRAY:
+    case PNG_COLOR_TYPE_GRAY_ALPHA:
+    case PNG_COLOR_TYPE_RGB:
+    case PNG_COLOR_TYPE_PALETTE:
+    case PNG_COLOR_TYPE_RGB_ALPHA:
+      break;
+    default:
+      throw std::runtime_error("PNG: codec does not support images with color spaces different than GRAY, GRAY+alpha, RGB, RGB+alpha or Indexed colors (Palette)");
   }
 
   // 7. Read content
   const bob::io::base::array::typeinfo& info = b.type();
-  bool has_alpha = (color_type & PNG_COLOR_MASK_ALPHA) == PNG_COLOR_MASK_ALPHA;
   if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 2) im_load_gray<uint8_t>(png_ptr, b);
-    else if( info.nd == 3) im_load_color<uint8_t>(png_ptr, b, has_alpha);
+    else if(info.nd == 3) im_load_color<uint8_t>(png_ptr, b);
     else {
       png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
       boost::format m("the image in file `%s' has a number of dimensions for which this png codec has no support for: %s");
@@ -279,7 +279,7 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
   }
   else if(info.dtype == bob::io::base::array::t_uint16) {
     if(info.nd == 2) im_load_gray<uint16_t>(png_ptr, b);
-    else if( info.nd == 3) im_load_color<uint16_t>(png_ptr, b, has_alpha);
+    else if( info.nd == 3) im_load_color<uint16_t>(png_ptr, b);
     else {
       png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
       boost::format m("the image in file `%s' has a number of dimensions for which this png codec has no support for: %s");
@@ -328,9 +328,9 @@ void rgb_to_imbuffer(const size_t size, const T* r, const T* g, const T* b, T* i
 {
   for (size_t k=0; k<size; ++k)
   {
-    im[3*k]   = r[k];
-    im[3*k+1] = g[k];
-    im[3*k+2] = b[k];
+    *im++ = *r++;
+    *im++ = *g++;
+    *im++ = *b++;
   }
 }
 
