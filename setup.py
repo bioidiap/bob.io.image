@@ -359,7 +359,7 @@ setup(
     name='bob.io.image',
     version=version,
     description='Image I/O support for Bob',
-    url='http://github.com/bioidiap/bob.io.image',
+    url='http://gitlab.idiap.ch/bob/bob.io.image',
     license='BSD',
     author='Andre Anjos',
     author_email='andre.anjos@idiap.ch',
