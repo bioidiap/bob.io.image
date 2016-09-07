@@ -280,13 +280,30 @@ QuantizeBuffer(unsigned int Width, unsigned int Height, int *ColorMapSize,
 #undef MAX_PRIM_COLOR
 #endif // End of ugly QuantizeBuffer definition for giflib 4.2
 
+static void GifErrorHandler(const char* fname, int error) {
+  const char* error_string = GifErrorString(error);
+  boost::format m("GIF: error in %s(): %s");
+  m % fname;
+  if (error_string) m % error_string;
+  else m % "unknown error";
+  throw std::runtime_error(m.str());
+}
 
-static int DGifDeleter(GifFileType* ptr){
+static int DGifDeleter (GifFileType* ptr) {
 #if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5) || (GIFLIB_MAJOR == 5) && (GIFLIB_MINOR < 1)
   return DGifCloseFile(ptr);
 #else
-  int error;
-  return DGifCloseFile(ptr, &error);
+  int error = GIF_OK;
+  int retval = DGifCloseFile(ptr, &error);
+  if (retval == GIF_ERROR) {
+    //do not call GifErrorHandler here, or the interpreter will crash
+    const char* error_string = GifErrorString(retval);
+    boost::format m("In DGifCloseFile(): %s");
+    if (error_string) m % error_string;
+    else m % "unknown error";
+    std::cerr << "ERROR: " << m.str() << std::endl;
+  }
+  return retval;
 #endif
 }
 
@@ -294,25 +311,35 @@ static boost::shared_ptr<GifFileType> make_dfile(const char *filename)
 {
 #if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5)
   GifFileType* fp = DGifOpenFileName(filename);
-#else
-  int error;
-  GifFileType* fp = DGifOpenFileName(filename, &error);
-#endif
-  if(fp == 0) {
+  if (!fp) {
     boost::format m("cannot open file `%s'");
     m % filename;
     throw std::runtime_error(m.str());
   }
+#else
+  int error = GIF_OK;
+  GifFileType* fp = DGifOpenFileName(filename, &error);
+  if (!fp) GifErrorHandler("DGifOpenFileName", error);
+#endif
   return boost::shared_ptr<GifFileType>(fp, DGifDeleter);
 }
 
 
-static int EGifDeleter(GifFileType* ptr){
+static int EGifDeleter (GifFileType* ptr) {
 #if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5) || (GIFLIB_MAJOR == 5) && (GIFLIB_MINOR < 1)
   return EGifCloseFile(ptr);
 #else
-  int error;
-  return EGifCloseFile(ptr, &error);
+  int error = GIF_OK;
+  int retval = EGifCloseFile(ptr, &error);
+  if (retval == GIF_ERROR) {
+    //do not call GifErrorHandler here, or the interpreter will crash
+    const char* error_string = GifErrorString(error);
+    boost::format m("In EGifCloseFile(): %s");
+    if (error_string) m % error_string;
+    else m % "unknown error";
+    std::cerr << "ERROR: " << m.str() << std::endl;
+  }
+  return retval;
 #endif
 }
 
@@ -320,15 +347,16 @@ static boost::shared_ptr<GifFileType> make_efile(const char *filename)
 {
 #if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5)
   GifFileType* fp = EGifOpenFileName(filename, false);
-#else
-  int error;
-  GifFileType* fp = EGifOpenFileName(filename, false, &error);
-#endif
-  if(fp == 0) {
+  if (!fp) {
     boost::format m("cannot open file `%s'");
     m % filename;
     throw std::runtime_error(m.str());
   }
+#else
+  int error = GIF_OK;
+  GifFileType* fp = EGifOpenFileName(filename, false, &error);
+  if (!fp) GifErrorHandler("EGifOpenFileName", error);
+#endif
   return boost::shared_ptr<GifFileType>(fp, EGifDeleter);
 }
 
@@ -382,13 +410,13 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
   int InterlacedOffset[] = { 0, 4, 2, 1 }; // The way Interlaced image should.
   int InterlacedJumps[] = { 8, 8, 4, 2 }; // be read - offsets and jumps...
   int row, col, width, height, count, ext_code;
-  if(DGifGetRecordType(in_file.get(), &record_type) == GIF_ERROR)
-    throw std::runtime_error("GIF: error in DGifGetRecordType().");
+  int error = DGifGetRecordType(in_file.get(), &record_type);
+  if(error == GIF_ERROR)
+    GifErrorHandler("DGifGetRecordType", error);
   switch(record_type) {
     case IMAGE_DESC_RECORD_TYPE:
-      if(DGifGetImageDesc(in_file.get()) == GIF_ERROR)
-        throw std::runtime_error("GIF: error in DGifGetImageDesc().");
-
+      error = DGifGetImageDesc(in_file.get());
+      if (error == GIF_ERROR) GifErrorHandler("DGifGetImageDesc", error);
       row = in_file->Image.Top; // Image Position relative to Screen.
       col = in_file->Image.Left;
       width = in_file->Image.Width;
@@ -403,28 +431,24 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
         for(int i=count=0; i<4; ++i)
           for(int j=row+InterlacedOffset[i]; j<row+height; j+=InterlacedJumps[i]) {
             ++count;
-            if(DGifGetLine(in_file.get(), &screen_buffer[j][col], width) == GIF_ERROR) {
-              throw std::runtime_error("GIF: error in DGifGetLine().");
-            }
+            error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
+            if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", error);
           }
       }
       else {
         for(int i=0; i<height; ++i) {
-          if(DGifGetLine(in_file.get(), &screen_buffer[row++][col], width) == GIF_ERROR) {
-            throw std::runtime_error("GIF: error in DGifGetLine().");
-          }
+          error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
+          if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", error);
         }
       }
       break;
     case EXTENSION_RECORD_TYPE:
       // Skip any extension blocks in file:
-      if(DGifGetExtension(in_file.get(), &ext_code, &extension) == GIF_ERROR) {
-        throw std::runtime_error("GIF: error in DGifGetExtension().");
-      }
+      error = DGifGetExtension(in_file.get(), &ext_code, &extension);
+      if (error == GIF_ERROR) GifErrorHandler("DGifGetExtension", error);
       while(extension != NULL) {
-        if(DGifGetExtensionNext(in_file.get(), &extension) == GIF_ERROR) {
-          throw std::runtime_error("GIF: error in DGifGetExtensionNext().");
-        }
+        error = DGifGetExtensionNext(in_file.get(), &extension);
+        if(error == GIF_ERROR) GifErrorHandler("DGifGetExtensionNext", error);
       }
       break;
     case TERMINATE_RECORD_TYPE:
@@ -462,8 +486,8 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
 
   // 2. Read content
   const bob::io::base::array::typeinfo& info = b.type();
-  if(info.dtype == bob::io::base::array::t_uint8) {
-    if( info.nd == 3) im_load_color(in_file, b);
+  if (info.dtype == bob::io::base::array::t_uint8) {
+    if (info.nd == 3) im_load_color(in_file, b);
     else {
       boost::format m("GIF: cannot read object of type `%s' from file `%s'");
       m % info.str() % filename;
@@ -509,25 +533,29 @@ static void im_save_color(const bob::io::base::array::interface& b, boost::share
 #endif
     throw std::runtime_error("GIF: error in GifMakeMapObject().");
 
+  int error;
 #if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5)
-  if(QuantizeBuffer(width, height, &ColorMapSize,
-       red_buffer, green_buffer, blue_buffer, output_buffer.get(), OutputColorMap->Colors) == GIF_ERROR)
+  error = QuantizeBuffer(width, height, &ColorMapSize,
+      red_buffer, green_buffer, blue_buffer, output_buffer.get(),
+      OutputColorMap->Colors);
 #else
-  if(GifQuantizeBuffer(width, height, &ColorMapSize,
-       red_buffer, green_buffer, blue_buffer, output_buffer.get(), OutputColorMap->Colors) == GIF_ERROR)
+  error = GifQuantizeBuffer(width, height, &ColorMapSize,
+      red_buffer, green_buffer, blue_buffer, output_buffer.get(),
+      OutputColorMap->Colors);
 #endif
-    throw std::runtime_error("GIF: error in GifQuantizeBuffer().");
+  if (error == GIF_ERROR) GifErrorHandler("GifQuantizeBuffer", error);
 
-  if(EGifPutScreenDesc(out_file.get(), width, height, ExpNumOfColors, 0, OutputColorMap) == GIF_ERROR)
-    throw std::runtime_error("GIF: error in EGifPutScreenDesc().");
+  error = EGifPutScreenDesc(out_file.get(), width, height, ExpNumOfColors, 0,
+      OutputColorMap);
+  if (error == GIF_ERROR) GifErrorHandler("EGifPutScreenDesc", error);
 
-  if(EGifPutImageDesc(out_file.get(), 0, 0, width, height, false, NULL) == GIF_ERROR)
-    throw std::runtime_error("GIF: error in EGifPutImageDesc().");
+  error = EGifPutImageDesc(out_file.get(), 0, 0, width, height, false, NULL);
+  if (error == GIF_ERROR) GifErrorHandler("EGifPutImageDesc", error);
 
   GifByteType *ptr = output_buffer.get();
   for(int i=0; i<height; ++i) {
-    if(EGifPutLine(out_file.get(), ptr, width) == GIF_ERROR)
-      throw std::runtime_error("GIF: error in EGifPutLine().");
+    error = EGifPutLine(out_file.get(), ptr, width);
+    if (error == GIF_ERROR) GifErrorHandler("EGifPutImageDesc", error);
     ptr += width;
   }
 
