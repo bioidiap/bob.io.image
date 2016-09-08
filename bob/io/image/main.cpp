@@ -187,12 +187,41 @@ BOB_CATCH_FUNCTION("_test_io", 0)
 }
 
 
+static auto s_image_extension = bob::extension::FunctionDoc(
+  "get_correct_image_extension",
+  "Estimates the image type and return a corresponding extension based on file content",
+  "This function loads the first bytes of the given image, and matches it with known magic numbers of image files. "
+  "If a match is found, it returns the corresponding image extension (including the leading ``'.'`` that can be used, e.g., in :py:func:`bob.io.image.load`."
+)
+.add_prototype("image_name", "extension")
+.add_parameter("image_name", "str", "The name (including path) of the image to check")
+.add_return("extension", "str", "The extension of the image based on the file content")
+;
+static PyObject* image_extension(PyObject*, PyObject *args, PyObject* kwds) {
+BOB_TRY
+  static char** kwlist = s_image_extension.kwlist();
+
+  const char* image_name;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", kwlist, &image_name)) return 0;
+
+  return Py_BuildValue("s", bob::io::image::get_correct_image_extension(image_name).c_str());
+
+BOB_CATCH_FUNCTION("get_correct_image_extension", 0)
+}
+
+
 static PyMethodDef module_methods[] = {
   {
     s_test_io.name(),
     (PyCFunction)_test_io,
     METH_VARARGS|METH_KEYWORDS,
     s_test_io.doc(),
+  },
+  {
+    s_image_extension.name(),
+    (PyCFunction)image_extension,
+    METH_VARARGS|METH_KEYWORDS,
+    s_image_extension.doc(),
   },
   {0}  /* Sentinel */
 };
