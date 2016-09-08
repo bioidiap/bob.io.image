@@ -397,6 +397,7 @@ setup(
           "bob/io/image/cpp/bmp.cpp",
           "bob/io/image/cpp/pnmio.cpp",
           "bob/io/image/cpp/netpbm.cpp",
+          "bob/io/image/cpp/image.cpp",
         ],
         packages = packages,
         boost_modules = boost_modules,

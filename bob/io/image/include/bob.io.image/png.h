@@ -88,7 +88,7 @@ namespace bob { namespace io { namespace image {
       static std::string s_codecname;
   };
 
-  bool is_color_png(const std::string& filename){
+  inline bool is_color_png(const std::string& filename){
     PNGFile png(filename.c_str(), 'r');
     return png.type().nd == 3;
   }
