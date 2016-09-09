@@ -56,7 +56,7 @@ static std::map<std::string, std::vector<std::vector<std::uint8_t>>> known_magic
 
 const std::string& get_correct_image_extension(const std::string& image_name){
   // read first 8 bytes from file
-  static uint8_t image_bytes[8];
+  uint8_t image_bytes[8];
   std::ifstream f(image_name);
   if (!f) throw std::runtime_error("The given image '" + image_name + "' could not be opened for reading");
   f.read(reinterpret_cast<char*>(image_bytes), 8);
