@@ -11,48 +11,50 @@
 
 namespace bob { namespace io { namespace image {
 
-const std::string& get_correct_image_extension(const std::string& image_name){
-  // global map of known magic numbers
+static std::map<std::string, std::vector<std::vector<std::uint8_t>>> _initialize_magic_numbers(){
   // these numbers are based on: http://stackoverflow.com/questions/26350342/determining-the-extension-type-of-an-image-file-using-binary/26350431#26350431
-  static std::map<std::string, std::vector<std::vector<std::uint8_t>>> known_magic_numbers;
-
-  // initialize list, if not done yet
-  if (known_magic_numbers.empty()){
-    // BMP
-    known_magic_numbers[".bmp"].push_back({ 0x42, 0x4D });
-    // NetPBM, see https://en.wikipedia.org/wiki/Netpbm_format
-    known_magic_numbers[".pbm"].push_back({ 0x50, 0x31 });// P1
-    known_magic_numbers[".pbm"].push_back({ 0x50, 0x34 });// P4
-    known_magic_numbers[".pgm"].push_back({ 0x50, 0x32 });// P2
-    known_magic_numbers[".pgm"].push_back({ 0x50, 0x35 });// P5
-    known_magic_numbers[".ppm"].push_back({ 0x50, 0x33 });// P3
-    known_magic_numbers[".ppm"].push_back({ 0x50, 0x36 });// P6
-    // TODO: what about P7?
+  std::map<std::string, std::vector<std::vector<std::uint8_t>>> magic_numbers;
+  // BMP
+  magic_numbers[".bmp"].push_back({ 0x42, 0x4D });
+  // NetPBM, see https://en.wikipedia.org/wiki/Netpbm_format
+  magic_numbers[".pbm"].push_back({ 0x50, 0x31 });// P1
+  magic_numbers[".pbm"].push_back({ 0x50, 0x34 });// P4
+  magic_numbers[".pgm"].push_back({ 0x50, 0x32 });// P2
+  magic_numbers[".pgm"].push_back({ 0x50, 0x35 });// P5
+  magic_numbers[".ppm"].push_back({ 0x50, 0x33 });// P3
+  magic_numbers[".ppm"].push_back({ 0x50, 0x36 });// P6
+  // TODO: what about P7?
 
 #ifdef HAVE_GIFLIB
-    // GIF
-    known_magic_numbers[".gif"].push_back({ 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 });
-    known_magic_numbers[".gif"].push_back({ 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 });
+  // GIF
+  magic_numbers[".gif"].push_back({ 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 });
+  magic_numbers[".gif"].push_back({ 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 });
 #endif // HAVE_GIFLIB
 #ifdef HAVE_LIBPNG
-    // PNG
-    known_magic_numbers[".png"].push_back({ 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A });
+  // PNG
+  magic_numbers[".png"].push_back({ 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A });
 #endif // HAVE_LIB_PNG
 #ifdef HAVE_LIBJPEG
-    // JPEG
-    known_magic_numbers[".jpg"].push_back({ 0xFF, 0xD8, 0xFF });
-    known_magic_numbers[".jpg"].push_back({ 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20 });
+  // JPEG
+  magic_numbers[".jpg"].push_back({ 0xFF, 0xD8, 0xFF });
+  magic_numbers[".jpg"].push_back({ 0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20 });
 #endif // HAVE_LIBJPEG
 #ifdef HAVE_LIBTIFF
-    // TIFF
-    known_magic_numbers[".tiff"].push_back({ 0x0C, 0xED });
-    known_magic_numbers[".tiff"].push_back({ 0x49, 0x20, 0x49 });
-    known_magic_numbers[".tiff"].push_back({ 0x49, 0x49, 0x2A, 0x00 });
-    known_magic_numbers[".tiff"].push_back({ 0x4D, 0x4D, 0x00, 0x2A });
-    known_magic_numbers[".tiff"].push_back({ 0x4D, 0x4D, 0x00, 0x2B });
+  // TIFF
+  magic_numbers[".tiff"].push_back({ 0x0C, 0xED });
+  magic_numbers[".tiff"].push_back({ 0x49, 0x20, 0x49 });
+  magic_numbers[".tiff"].push_back({ 0x49, 0x49, 0x2A, 0x00 });
+  magic_numbers[".tiff"].push_back({ 0x4D, 0x4D, 0x00, 0x2A });
+  magic_numbers[".tiff"].push_back({ 0x4D, 0x4D, 0x00, 0x2B });
 #endif // HAVE_LIBTIFF
-  }
+  return magic_numbers;
+}
 
+// global static thread-safe map of known magic numbers
+static std::map<std::string, std::vector<std::vector<std::uint8_t>>> known_magic_numbers = _initialize_magic_numbers();
+
+
+const std::string& get_correct_image_extension(const std::string& image_name){
   // read first 8 bytes from file
   static uint8_t image_bytes[8];
   std::ifstream f(image_name);
