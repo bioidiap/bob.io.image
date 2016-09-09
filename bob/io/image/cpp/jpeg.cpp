@@ -94,16 +94,6 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
   // 5. Start decompression and get information
   jpeg_start_decompress(&cinfo);
 
-  if( cinfo.output_components != 1 && cinfo.output_components != 3)
-  {
-    // 6. clean up
-    jpeg_destroy_decompress(&cinfo);
-
-    boost::format m("unsupported number of planes (%d) when reading file. Image depth must be 1 or 3.");
-    m % cinfo.output_components;
-    throw std::runtime_error(m.str());
-  }
-
   // Set depth and number of dimensions
   info.dtype = bob::io::base::array::t_uint8;
   info.nd = (cinfo.output_components == 1? 2 : 3);
@@ -148,6 +138,27 @@ void imbuffer_to_rgb(size_t size, const T* im, T* r, T* g, T* b) {
 }
 
 template <typename T> static
+void cmyk_imbuffer_to_rgb(size_t size, const T* im, T* r, T* g, T* b, bool adobe_marker) {
+  T C,M,Y,K;
+  for (size_t k=0; k<size; ++k) {
+    if (adobe_marker){
+      C = *im++;
+      M = *im++;
+      Y = *im++;
+      K = *im++;
+    } else {
+      C = 255-*im++;
+      M = 255-*im++;
+      Y = 255-*im++;
+      K = 255-*im++;
+    }
+    *r++ = C * K / 255;
+    *g++ = M * K / 255;
+    *b++ = Y * K / 255;
+  }
+}
+
+template <typename T> static
 void im_load_color(struct jpeg_decompress_struct *cinfo, bob::io::base::array::interface& b) {
   const bob::io::base::array::typeinfo& info = b.type();
 
@@ -162,7 +173,11 @@ void im_load_color(struct jpeg_decompress_struct *cinfo, bob::io::base::array::i
   buffer_pptr[0] = buffer.get();
   while (cinfo->output_scanline < cinfo->output_height) {
     jpeg_read_scanlines(cinfo, buffer_pptr, 1);
-    imbuffer_to_rgb<T>(info.shape[2], reinterpret_cast<T*>(buffer_pptr[0]), element_r, element_g, element_b);
+    if (cinfo->output_components == 3)
+      imbuffer_to_rgb<T>(info.shape[2], reinterpret_cast<T*>(buffer_pptr[0]), element_r, element_g, element_b);
+    else
+      cmyk_imbuffer_to_rgb<T>(info.shape[2], reinterpret_cast<T*>(buffer_pptr[0]), element_r, element_g, element_b, cinfo->saw_Adobe_marker);
+
     element_r += cinfo->output_width;
     element_g += cinfo->output_width;
     element_b += cinfo->output_width;
@@ -188,6 +203,10 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
   jpeg_read_header(&cinfo, TRUE);
 
   // 4. Set parameters for decompression
+  if (cinfo.output_components == 4){
+    // assure to get CMYK output
+    cinfo.out_color_space = JCS_CMYK;
+  }
 
   // 5. Start decompression and get information
   jpeg_start_decompress(&cinfo);
