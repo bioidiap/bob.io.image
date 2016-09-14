@@ -281,9 +281,13 @@ QuantizeBuffer(unsigned int Width, unsigned int Height, int *ColorMapSize,
 #endif // End of ugly QuantizeBuffer definition for giflib 4.2
 
 static void GifErrorHandler(const char* fname, int error) {
+#if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5)
+  const char* error_string = "unknown error (giflib < 5)";
+#else
   const char* error_string = GifErrorString(error);
-  boost::format m("GIF: error in %s(): %s");
-  m % fname;
+#endif
+  boost::format m("GIF: error in %s(): (%d) %s");
+  m % fname % error;
   if (error_string) m % error_string;
   else m % "unknown error";
   throw std::runtime_error(m.str());
@@ -298,7 +302,8 @@ static int DGifDeleter (GifFileType* ptr) {
   if (retval == GIF_ERROR) {
     //do not call GifErrorHandler here, or the interpreter will crash
     const char* error_string = GifErrorString(retval);
-    boost::format m("In DGifCloseFile(): %s");
+    boost::format m("In DGifCloseFile(): (%d) %s");
+    m % error;
     if (error_string) m % error_string;
     else m % "unknown error";
     std::cerr << "ERROR: " << m.str() << std::endl;
@@ -334,7 +339,8 @@ static int EGifDeleter (GifFileType* ptr) {
   if (retval == GIF_ERROR) {
     //do not call GifErrorHandler here, or the interpreter will crash
     const char* error_string = GifErrorString(error);
-    boost::format m("In EGifCloseFile(): %s");
+    boost::format m("In EGifCloseFile(): (%d) %s");
+    m % error;
     if (error_string) m % error_string;
     else m % "unknown error";
     std::cerr << "ERROR: " << m.str() << std::endl;
