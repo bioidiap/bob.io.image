@@ -29,34 +29,18 @@
 #include <bob.io.image/tiff.h>
 #include <boost/filesystem/path.hpp>
 #include <boost/algorithm/string.hpp>
-
+#include <fstream>
+#include <algorithm>
 
 namespace bob { namespace io { namespace image {
 
-inline bool is_color_image(const std::string& filename){
-  std::string extension = boost::filesystem::path(filename).extension().string();
-  boost::algorithm::to_lower(extension);
-  if (extension == ".bmp") return true;
-#ifdef HAVE_GIFLIB
-  if (extension == ".gif") return true;
-#endif
-#ifdef HAVE_LIBPNG
-  if (extension == ".png") return is_color_png(filename);
-#endif
-#ifdef HAVE_LIBJPEG
-  if (extension == ".jpg" || extension == ".jpeg") return is_color_jpeg(filename);
-#endif
-#ifdef HAVE_LIBTIFF
-  if (extension == ".tif" || extension == ".tiff") return is_color_tiff(filename);
-#endif
-  if (extension == ".pgm" || extension == ".pbm") return false;
-  if (extension == ".ppm") return true;
+const std::string& get_correct_image_extension(const std::string& image_name);
 
-  throw std::runtime_error("The filename extension '" + extension + "' is not known");
-}
+bool is_color_image(const std::string& filename, std::string extension="");
 
-inline blitz::Array<uint8_t,3> read_color_image(const std::string& filename){
-  std::string extension = boost::filesystem::path(filename).extension().string();
+inline blitz::Array<uint8_t,3> read_color_image(const std::string& filename, std::string extension=""){
+  if (extension.empty())
+    extension = boost::filesystem::path(filename).extension().string();
   boost::algorithm::to_lower(extension);
   if (extension == ".bmp") return read_bmp(filename);
 #ifdef HAVE_GIFLIB
@@ -76,8 +60,9 @@ inline blitz::Array<uint8_t,3> read_color_image(const std::string& filename){
   throw std::runtime_error("The filename extension '" + extension + "' is not known or not supported for color images");
 }
 
-blitz::Array<uint8_t,2> read_gray_image(const std::string& filename){
-  std::string extension = boost::filesystem::path(filename).extension().string();
+blitz::Array<uint8_t,2> read_gray_image(const std::string& filename, std::string extension=""){
+  if (extension.empty())
+    extension = boost::filesystem::path(filename).extension().string();
   boost::algorithm::to_lower(extension);
 #ifdef HAVE_LIBPNG
   if (extension == ".png") return read_png<uint8_t,2>(filename);
@@ -95,8 +80,9 @@ blitz::Array<uint8_t,2> read_gray_image(const std::string& filename){
 }
 
 
-void write_color_image(const blitz::Array<uint8_t,3>& image, const std::string& filename){
-  std::string extension = boost::filesystem::path(filename).extension().string();
+void write_color_image(const blitz::Array<uint8_t,3>& image, const std::string& filename, std::string extension=""){
+  if (extension.empty())
+    extension = boost::filesystem::path(filename).extension().string();
   boost::algorithm::to_lower(extension);
   if (extension == ".bmp") return write_bmp(image, filename); // this will only work for T=uint8_t
 #ifdef HAVE_GIFLIB
@@ -116,8 +102,9 @@ void write_color_image(const blitz::Array<uint8_t,3>& image, const std::string& 
   throw std::runtime_error("The filename extension '" + extension + "' is not known or not supported for color images");
 }
 
-void write_gray_image(const blitz::Array<uint8_t,2>& image, const std::string& filename){
-  std::string extension = boost::filesystem::path(filename).extension().string();
+void write_gray_image(const blitz::Array<uint8_t,2>& image, const std::string& filename, std::string extension=""){
+  if (extension.empty())
+    extension = boost::filesystem::path(filename).extension().string();
   boost::algorithm::to_lower(extension);
 #ifdef HAVE_LIBPNG
   if (extension == ".png") return write_png(image, filename);

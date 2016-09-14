@@ -123,7 +123,7 @@ namespace bob { namespace io { namespace image {
   }
 
 
-  bool is_color_p_m(const std::string& filename){
+  inline bool is_color_p_m(const std::string& filename){
     NetPBMFile p_m(filename.c_str(), 'r');
     return p_m.type().nd == 3;
   }
