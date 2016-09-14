@@ -22,6 +22,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
+#include <bob.core/logging.h>
 #include <bob.io.image/jpeg.h>
 
 #include <jpeglib.h>
@@ -49,12 +50,21 @@ static void my_error_exit (j_common_ptr cinfo){
   char message[JMSG_LENGTH_MAX];
   cinfo->err->format_message(cinfo, message);
   // format error
-  boost::format m("Fatal JPEG error (%d) has occurred -> %s");
-  m % cinfo->err->msg_code % message;
+  boost::format m("In image '%s' fatal JPEG error (%d) has occurred -> %s");
+  m % reinterpret_cast<char*>(cinfo->client_data) % cinfo->err->msg_code % message;
 
   // Clean-up JPEG structures IS NOT required,
   // just raise the exception
   throw std::runtime_error(m.str());
+}
+
+static void my_output_message(j_common_ptr cinfo){
+  // get warning message
+  char message[JMSG_LENGTH_MAX];
+  cinfo->err->format_message(cinfo, message);
+
+  // log message as debug
+  bob::core::debug << "In image '" << reinterpret_cast<char*>(cinfo->client_data) << "' JPEG warning has occured -> " << message;
 }
 
 
@@ -67,6 +77,9 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
   struct jpeg_error_mgr jerr;
   cinfo.err = jpeg_std_error(&jerr);
   jerr.error_exit = my_error_exit;
+  jerr.output_message = my_output_message;
+  // set image name as client data; used for warning and error messages
+  cinfo.client_data = const_cast<char*>(path.c_str());
   jpeg_create_decompress(&cinfo);
 
   // 2. JPEG file opening
@@ -162,6 +175,9 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
   struct jpeg_error_mgr jerr;
   cinfo.err = jpeg_std_error(&jerr);
   jerr.error_exit = my_error_exit;
+  jerr.output_message = my_output_message;
+  // set image name as client data; used for warning and error messages
+  cinfo.client_data = const_cast<char*>(filename.c_str());
   jpeg_create_decompress(&cinfo);
 
   // 2. JPEG file opening
@@ -260,6 +276,9 @@ static void im_save (const std::string& filename, const bob::io::base::array::in
   struct jpeg_error_mgr jerr;
   cinfo.err = jpeg_std_error(&jerr);
   jerr.error_exit = my_error_exit;
+  jerr.output_message = my_output_message;
+  // set image name as client data; used for warning and error messages
+  cinfo.client_data = const_cast<char*>(filename.c_str());
   jpeg_create_compress(&cinfo);
 
   // 2. JPEG opening
