@@ -282,9 +282,9 @@ QuantizeBuffer(unsigned int Width, unsigned int Height, int *ColorMapSize,
 
 static void GifErrorHandler(const char* fname, int error) {
 #if defined(GIF_LIB_VERSION) || (GIFLIB_MAJOR < 5)
-  const char* error_string = GifErrorString(error);
-#else
   const char* error_string = "unknown error (giflib < 5)";
+#else
+  const char* error_string = GifErrorString(error);
 #endif
   boost::format m("GIF: error in %s(): (%d) %s");
   m % fname % error;
