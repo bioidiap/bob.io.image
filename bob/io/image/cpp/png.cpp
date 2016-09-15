@@ -54,13 +54,13 @@ static boost::shared_ptr<std::FILE> make_cfile(const char *filename, const char 
 static void my_png_error(png_structp png_ptr, png_const_charp message){
   // error handling -> raise an exception
   boost::format m("In image '%s' fatal PNG error has occurred -> %s");
-  m % reinterpret_cast<char*>(png_ptr->error_ptr) % message;
+  m % reinterpret_cast<char*>(png_get_error_ptr(png_ptr)) % message;
   throw std::runtime_error(m.str());
 }
 
 static void my_png_warning(png_structp png_ptr, png_const_charp message){
   // warning handling -> emit debug message
-  bob::core::debug << "In image '" << reinterpret_cast<char*>(png_ptr->error_ptr) << "' PNG warning has occured -> " << message << std::endl;
+  bob::core::debug << "In image '" << reinterpret_cast<char*>(png_get_error_ptr(png_ptr)) << "' PNG warning has occured -> " << message << std::endl;
 }
 
 /**
