@@ -64,7 +64,7 @@ static void my_output_message(j_common_ptr cinfo){
   cinfo->err->format_message(cinfo, message);
 
   // log message as debug
-  bob::core::debug << "In image '" << reinterpret_cast<char*>(cinfo->client_data) << "' JPEG warning has occured -> " << message;
+  bob::core::debug << "In image '" << reinterpret_cast<char*>(cinfo->client_data) << "' JPEG warning has occured -> " << message << std::endl;
 }
 
 
