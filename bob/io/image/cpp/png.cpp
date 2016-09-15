@@ -21,6 +21,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 
+#include <bob.core/logging.h>
 #include <bob.io.image/png.h>
 
 extern "C" {
@@ -48,6 +49,21 @@ static boost::shared_ptr<std::FILE> make_cfile(const char *filename, const char 
 }
 
 /**
+ * ERROR HANDLING
+ */
+static void my_png_error(png_structp png_ptr, png_const_charp message){
+  // error handling -> raise an exception
+  boost::format m("In image '%s' fatal PNG error has occurred -> %s");
+  m % reinterpret_cast<char*>(png_get_error_ptr(png_ptr)) % message;
+  throw std::runtime_error(m.str());
+}
+
+static void my_png_warning(png_structp png_ptr, png_const_charp message){
+  // warning handling -> emit debug message
+  bob::core::debug << "In image '" << reinterpret_cast<char*>(png_get_error_ptr(png_ptr)) << "' PNG warning has occured -> " << message << std::endl;
+}
+
+/**
  * LOADING
  */
 static void im_peek(const std::string& path, bob::io::base::array::typeinfo& info)
@@ -62,7 +78,7 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
   // 3. Create and initialize the png_struct. The compiler header file version
   //    is supplied, so that we know if the application was compiled with a
   //    compatible version of the library.
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, const_cast<char*>(path.c_str()), my_png_error, my_png_warning);
   if(png_ptr == NULL) throw std::runtime_error("PNG: error while creating read png structure (function png_create_read_struct())");
 
   // Allocate/initialize the memory for image information.
@@ -72,20 +88,10 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
     throw std::runtime_error("PNG: error while creating info png structure (function png_create_info_struct())");
   }
 
-  // 4. Set error handling if you are using the setjmp/longjmp method (this is
-  // the normal method of doing things with libpng). This is required as we
-  // did not set up our own error handlers in the png_create_read_struct() earlier.
-  if(setjmp(png_jmpbuf(png_ptr)))
-  {
-    // Free all of the memory associated with the png_ptr and info_ptr
-    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-    throw std::runtime_error("PNG: error while setting error handling (function setjmp(png_jmpbuf(()))");
-  }
-
-  // 5. Initialize
+  // 4. Initialize
   png_init_io(png_ptr, in_file.get());
 
-  // 7. The call to png_read_info() gives us all of the information from the
+  // 5. The call to png_read_info() gives us all of the information from the
   // PNG file.
   png_read_info(png_ptr, info_ptr);
   // Get header information
@@ -94,7 +100,7 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
     &interlace_type, NULL, NULL);
 
-  // 8. Clean up after the read, and free any memory allocated
+  // 6. Clean up after the read, and free any memory allocated
   png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
   // Set depth and number of dimensions
@@ -207,7 +213,7 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
   // 3. Create and initialize the png_struct with the desired error handler
   // functions. The compiler header file version is supplied, so that we
   // know if the application was compiled with a compatible version of the library.
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, const_cast<char*>(filename.c_str()), my_png_error, my_png_warning);
   if(png_ptr == NULL) throw std::runtime_error("PNG: error while creating read png structure (function png_create_read_struct())");
 
   // Allocate/initialize the memory for image informatio
@@ -217,20 +223,10 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
     throw std::runtime_error("PNG: error while creating info png structure (function png_create_info_struct())");
   }
 
-  // 4. Set error handling if you are using the setjmp/longjmp method (this is
-  // the normal method of doing things with libpng). This is required as we did
-  // not set up your own error handlers in the png_create_read_struct() earlier.
-  if(setjmp(png_jmpbuf(png_ptr)))
-  {
-    // Free all of the memory associated with the png_ptr and info_ptr
-    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-    throw std::runtime_error("PNG: error while setting error handling (function setjmp(png_jmpbuf(()))");
-  }
-
-  // 5. Initialize
+  // 4. Initialize
   png_init_io(png_ptr, in_file.get());
 
-  // 6. The call to png_read_info() gives us all of the information from the
+  // 5. The call to png_read_info() gives us all of the information from the
   // PNG file.
   png_read_info(png_ptr, info_ptr);
   // Get header information
@@ -265,7 +261,7 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
       throw std::runtime_error("PNG: codec does not support images with color spaces different than GRAY, GRAY+alpha, RGB, RGB+alpha or Indexed colors (Palette)");
   }
 
-  // 7. Read content
+  // 6. Read content
   const bob::io::base::array::typeinfo& info = b.type();
   if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 2) im_load_gray<uint8_t>(png_ptr, b);
@@ -371,7 +367,7 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
   boost::shared_ptr<std::FILE> out_file = make_cfile(filename.c_str(), "wb");
 
   // 3.Create and initialize the png_struct with the desired error handler functions.
-  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, const_cast<char*>(filename.c_str()), my_png_error, my_png_warning);
 
   // Allocate/initialize the image information data.
   info_ptr = png_create_info_struct(png_ptr);
@@ -381,20 +377,10 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
     throw std::runtime_error("PNG: error while creating info png structure (function png_create_info_struct())");
   }
 
-  // 4. Set error handling.
-  // REQUIRED when an error handling function is not passed in in the
-  //  png_create_write_struct() call.
-  if(setjmp(png_jmpbuf(png_ptr)))
-  {
-    // If we get here, we had a problem writing the file
-    png_destroy_write_struct(&png_ptr, &info_ptr);
-    throw std::runtime_error("PNG: error while setting error handling (function setjmp(png_jmpbuf(()))");
-  }
-
-  // 5. Initialize
+  // 4. Initialize
   png_init_io(png_ptr, out_file.get());
 
-  // 6. Set the image information here:
+  // 5. Set the image information here:
   // width and height are up to 2^31
   // bit_depth is one of 1, 2, 4, 8, or 16, but valid values also depend on the color_type selected
   // color_type is one of PNG_COLOR_TYPE_GRAY, PNG_COLOR_TYPE_GRAY_ALPHA, PNG_COLOR_TYPE_PALETTE, PNG_COLOR_TYPE_RGB,
@@ -415,7 +401,7 @@ static void im_save(const std::string& filename, const bob::io::base::array::int
   // Pack pixels into bytes
   png_set_packing(png_ptr);
 
-  // 7. Writes content
+  // 6. Writes content
   if(info.dtype == bob::io::base::array::t_uint8) {
     if(info.nd == 2) im_save_gray<uint8_t>(array, png_ptr);
     else if(info.nd == 3) {
