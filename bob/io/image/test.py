@@ -62,6 +62,7 @@ def test_png_gray_alpha():
 def transcode(filename):
 
   tmpname = test_utils.temporary_filename(suffix=os.path.splitext(filename)[1])
+  tmpnam_ = test_utils.temporary_filename(suffix=os.path.splitext(filename)[1])
 
   try:
     # complete transcoding test
@@ -75,9 +76,22 @@ def transcode(filename):
 
     assert numpy.array_equal(image, image2)
 
+    # test getting part of the image as well
+    if len(image.shape) == 3:
+      subsample = image[:,::2,::2]
+    else:
+      subsample = image[::2,::2]
+
+    assert not subsample.flags.contiguous
+    write(subsample, tmpnam_)
+    image3 = load(tmpnam_)
+    assert numpy.array_equal(subsample, image3)
+
   finally:
     if os.path.exists(tmpname):
       os.unlink(tmpname)
+    if os.path.exists(tmpnam_):
+      os.unlink(tmpnam_)
 
 
 def test_netpbm():
