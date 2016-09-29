@@ -159,6 +159,22 @@ void imbuffer_to_rgb(const size_t size, const T* im, T* r, T* g, T* b)
   }
 }
 
+static uint16_t switch_endianess(const uint16_t p){
+  return p / 256 + p % 256 * 256;
+}
+
+template <>
+void imbuffer_to_rgb(const size_t size, const uint16_t* im, uint16_t* r, uint16_t* g, uint16_t* b)
+{
+  for(size_t k=0; k<size; ++k)
+  {
+    *r++ = switch_endianess(*im++);
+    *g++ = switch_endianess(*im++);
+    *b++ = switch_endianess(*im++);
+  }
+}
+
+
 template <typename T> static
 void im_load_color(png_structp png_ptr, bob::io::base::array::interface& b)
 {
@@ -329,6 +345,18 @@ void rgb_to_imbuffer(const size_t size, const T* r, const T* g, const T* b, T* i
     *im++ = *b++;
   }
 }
+
+template <>
+void rgb_to_imbuffer(const size_t size, const uint16_t* r, const uint16_t* g, const uint16_t* b, uint16_t* im)
+{
+  for (size_t k=0; k<size; ++k)
+  {
+    *im++ = switch_endianess(*r++);
+    *im++ = switch_endianess(*g++);
+    *im++ = switch_endianess(*b++);
+  }
+}
+
 
 template <typename T>
 static void im_save_color(const bob::io::base::array::interface& b, png_structp png_ptr)

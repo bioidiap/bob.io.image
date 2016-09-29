@@ -96,7 +96,7 @@ namespace bob { namespace io { namespace image {
   template <class T, int N>
   blitz::Array<T,N> read_png(const std::string& filename){
     PNGFile png(filename.c_str(), 'r');
-    return png.read<T,N>(0);
+    return png.cast<T,N>(0);
   }
 
   template <class T, int N>
