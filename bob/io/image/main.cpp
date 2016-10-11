@@ -16,6 +16,7 @@
 #include <bob.blitz/capi.h>
 #include <bob.blitz/cleanup.h>
 #include <bob.core/api.h>
+#include <bob.core/array_convert.h>
 #include <bob.io.base/api.h>
 
 #include "file.h"
@@ -155,6 +156,24 @@ BOB_TRY
   blitz::Array<uint8_t, 3> color_png = bob::io::image::read_color_image(png_color.string());
   if (blitz::any(blitz::abs(color_image - color_png) > 1))
     throw std::runtime_error("PNG color image IO did not succeed, check " + png_color.string());
+    
+  // test writing as uint16 and reading as uint8
+  blitz::Array<uint16_t, 2> uint16_gray(bob::core::array::convert<uint16_t>(gray_image));
+  boost::filesystem::path png_uint16(tempdir); png_uint16 /= std::string("uint16.png");
+  bob::io::image::write_png(uint16_gray, png_uint16.string());
+
+  blitz::Array<uint8_t, 2> uint8_gray = bob::io::image::read_gray_image(png_uint16.string());
+  if (blitz::any(blitz::abs(gray_image - uint8_gray) > 1))
+    throw std::runtime_error("PNG gray type conversion not succeed, check " + png_uint16.string());
+
+  blitz::Array<uint16_t, 3> uint16_color(bob::core::array::convert<uint16_t>(color_image));
+  boost::filesystem::path png_uint16c(tempdir); png_uint16c /= std::string("uint16c.png");
+  bob::io::image::write_png(uint16_color, png_uint16c.string());
+
+  blitz::Array<uint8_t, 3> uint8_color = bob::io::image::read_color_image(png_uint16c.string());
+  if (blitz::any(blitz::abs(color_image - uint8_color) > 1))
+    throw std::runtime_error("PNG color type conversion not succeed, check " + png_uint16c.string());
+  
 #endif
 
 #ifdef HAVE_LIBTIFF
