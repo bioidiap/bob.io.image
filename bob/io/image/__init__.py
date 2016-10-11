@@ -20,14 +20,14 @@ def get_config():
   return bob.extension.get_config(__name__, version.externals)
 
 def load(filename, extension=None):
-  """load(filename) -> image
+  """load(filename, extension) -> image
 
   This function loads and image from the file with the specified ``filename``.
   The type of the image will be determined based on the ``extension`` parameter, which can have the following values:
 
   - ``None``: The file name extension of the ``filename`` is used to determine the image type.
-  - ``'auto'``: The type of the image will be detected automatically, using the :py:mod:`imghdr` module.
-  - ``'.xxx`'': The image type is determined by the given extension.
+  - ``'auto'``: The type of the image will be detected automatically, using :py:func:`bob.io.image.get_correct_image_extension`.
+  - ``'.xxx'``: The image type is determined by the given extension.
                 For a list of possible extensions, see :py:func:`bob.io.base.extensions` (only the image extensions are valid here).
 
   **Parameters:**
