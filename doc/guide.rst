@@ -41,6 +41,33 @@ must be of type ``uint8`` or ``uint16``:
 The loaded image files can be 3D arrays (for RGB format) or 2D arrays (for
 greyscale) of type ``uint8`` or ``uint16``.
 
+In order to visualize the loaded image you can use :py:func:`bob.io.image.imshow`:
+
+.. doctest::
+
+  >>> from bob.io.base import test_utils
+  >>> path = test_utils.datafile('grace_hopper.png', 'bob.io.image')
+  >>> img = bob.io.base.load(path)
+  >>> bob.io.image.imshow(img)  # doctest: +SKIP
+
+.. plot::
+
+   import bob.io.base
+   import bob.io.image
+   from bob.io.base import test_utils
+
+   path = test_utils.datafile('grace_hopper.png', 'bob.io.image')
+   img = bob.io.base.load(path)
+   bob.io.image.imshow(img)
+
+Or you can just get a view (not copy) of your image that is :py:mod:`matplotlib.pyplot` compatible:
+
+.. doctest::
+
+  >>> img_view_for_matplotlib = bob.io.image.to_matplotlib(img)
+  >>> assert img_view_for_matplotlib.shape[-1] == 3
+  >>> assert img_view_for_matplotlib.base is img
+
 .. testcleanup:: *
 
   import shutil
