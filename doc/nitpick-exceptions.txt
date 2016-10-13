@@ -1,0 +1,6 @@
+# Documentation for C++ classes is not available yet
+cpp:type std
+cpp:type std::string
+cpp:type blitz
+cpp:type blitz::Array
+cpp:type uint8_t
