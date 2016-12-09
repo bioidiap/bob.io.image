@@ -120,6 +120,27 @@ static void im_peek(const std::string& path, bob::io::base::array::typeinfo& inf
   info.update_strides();
 }
 
+static uint16_t switch_endianess(const uint16_t p){
+  return p / 256 + p % 256 * 256;
+}
+
+template <typename T> static
+void imbuffer_to_gray(const size_t size, const T* im, T* g)
+{
+  std::copy(im, im+size, g);
+}
+
+template <>
+void imbuffer_to_gray(const size_t size, const uint16_t* im, uint16_t* g)
+{
+  for(size_t k=0; k<size; ++k)
+  {
+    *g++ = switch_endianess(*im++);
+  }
+}
+
+
+
 template <typename T> static
 void im_load_gray(png_structp png_ptr, bob::io::base::array::interface& b)
 {
@@ -134,16 +155,19 @@ void im_load_gray(png_structp png_ptr, bob::io::base::array::interface& b)
   int number_passes = 1;
 #endif // PNG_READ_INTERLACING_SUPPORTED
 
+  // Allocate array to contain a row of pixels
+  boost::shared_array<T> row(new T[width]);
+  png_bytep row_pointer = reinterpret_cast<png_bytep>(row.get());
+
   // Read the image (one row at a time)
   // This can deal with interlacing
-  png_bytep ptr;
   for(int pass=0; pass<number_passes; ++pass)
   {
     // Loop over the rows
     for(size_t y=0; y<height; ++y)
     {
-      ptr = reinterpret_cast<png_bytep>(reinterpret_cast<T*>(b.ptr())+y*width);
-      png_read_row(png_ptr, ptr, NULL);
+      png_read_row(png_ptr, row_pointer, NULL);
+      imbuffer_to_gray(width, reinterpret_cast<T*>(row_pointer), reinterpret_cast<T*>(b.ptr())+y*width);
     }
   }
 }
@@ -158,6 +182,18 @@ void imbuffer_to_rgb(const size_t size, const T* im, T* r, T* g, T* b)
     *b++ = *im++;
   }
 }
+
+template <>
+void imbuffer_to_rgb(const size_t size, const uint16_t* im, uint16_t* r, uint16_t* g, uint16_t* b)
+{
+  for(size_t k=0; k<size; ++k)
+  {
+    *r++ = switch_endianess(*im++);
+    *g++ = switch_endianess(*im++);
+    *b++ = switch_endianess(*im++);
+  }
+}
+
 
 template <typename T> static
 void im_load_color(png_structp png_ptr, bob::io::base::array::interface& b)
@@ -300,6 +336,22 @@ static void im_load(const std::string& filename, bob::io::base::array::interface
 /**
  * SAVING
  */
+
+template <typename T> static
+void gray_to_imbuffer(const size_t size, const T* g, T* im)
+{
+  std::copy(g, g+size, im);
+}
+
+template <>
+void gray_to_imbuffer(const size_t size, const uint16_t* g, uint16_t* im)
+{
+  for (size_t k=0; k<size; ++k)
+  {
+    *im++ = switch_endianess(*g++);
+  }
+}
+ 
 template <typename T>
 static void im_save_gray(const bob::io::base::array::interface& b, png_structp png_ptr)
 {
@@ -308,13 +360,16 @@ static void im_save_gray(const bob::io::base::array::interface& b, png_structp p
   const size_t width = info.shape[1];
 
   const T* row_pointer = reinterpret_cast<const T*>(b.ptr());
-  png_bytep row_pointer_;
+
+  // An array to store one row of pixels
+  boost::shared_array<T> row(new T[width]);
+  png_bytep array_ptr = reinterpret_cast<png_bytep>(row.get());
 
   // Save one row at a time
   for(size_t y=0; y<height; ++y)
   {
-    row_pointer_ = reinterpret_cast<png_bytep>(const_cast<T*>(row_pointer));
-    png_write_row(png_ptr, row_pointer_);
+    gray_to_imbuffer(width, row_pointer, reinterpret_cast<T*>(array_ptr));
+    png_write_row(png_ptr, array_ptr);
     row_pointer += width;
   }
 }
@@ -329,6 +384,18 @@ void rgb_to_imbuffer(const size_t size, const T* r, const T* g, const T* b, T* i
     *im++ = *b++;
   }
 }
+
+template <>
+void rgb_to_imbuffer(const size_t size, const uint16_t* r, const uint16_t* g, const uint16_t* b, uint16_t* im)
+{
+  for (size_t k=0; k<size; ++k)
+  {
+    *im++ = switch_endianess(*r++);
+    *im++ = switch_endianess(*g++);
+    *im++ = switch_endianess(*b++);
+  }
+}
+
 
 template <typename T>
 static void im_save_color(const bob::io::base::array::interface& b, png_structp png_ptr)

@@ -30,6 +30,7 @@
 #include <blitz/array.h>
 
 #include <bob.io.base/File.h>
+#include <bob.core/array_convert.h>
 
 
 /**
@@ -96,7 +97,18 @@ namespace bob { namespace io { namespace image {
   template <class T, int N>
   blitz::Array<T,N> read_png(const std::string& filename){
     PNGFile png(filename.c_str(), 'r');
-    return png.read<T,N>(0);
+    switch (png.type().dtype){
+      case bob::io::base::array::t_uint8:{
+        blitz::Array<uint8_t, N> image(png.read<uint8_t, N>(0));
+        return bob::core::array::convert<T>(image);
+      }
+      case bob::io::base::array::t_uint16:{
+        blitz::Array<uint16_t, N> image(png.read<uint16_t, N>(0));
+        return bob::core::array::convert<T>(image);
+      }
+      default:
+        throw std::runtime_error("The png image has a weired data type");
+    }
   }
 
   template <class T, int N>
