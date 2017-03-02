@@ -417,17 +417,21 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
   GifByteType *extension;
   int InterlacedOffset[] = { 0, 4, 2, 1 }; // The way Interlaced image should.
   int InterlacedJumps[] = { 8, 8, 4, 2 }; // be read - offsets and jumps...
-  int row, col, width, height, ext_code;
+  int row, col, width, height, count, ext_code;
   bool terminated = false;
   bool image_found = false;
   do{
     int error = DGifGetRecordType(in_file.get(), &record_type);
     if(error == GIF_ERROR)
-      GifErrorHandler("DGifGetRecordType", in_file->Error);
+      GifErrorHandler("DGifGetRecordType", error);
     switch(record_type) {
       case IMAGE_DESC_RECORD_TYPE:
+        if (image_found){
+          // we already have found an image...
+          break;
+        }
         error = DGifGetImageDesc(in_file.get());
-        if (error == GIF_ERROR) GifErrorHandler("DGifGetImageDesc", in_file->Error);
+        if (error == GIF_ERROR) GifErrorHandler("DGifGetImageDesc", error);
         row = in_file->Image.Top; // Image Position relative to Screen.
         col = in_file->Image.Left;
         width = in_file->Image.Width;
@@ -439,26 +443,17 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
         }
         if(in_file->Image.Interlace) {
           // Need to perform 4 passes on the images:
-          for(int i=0; i<4; ++i)
+          for(int i=count=0; i<4; ++i)
             for(int j=row+InterlacedOffset[i]; j<row+height; j+=InterlacedJumps[i]) {
-              if (image_found)
-                // image buffer already filled; read in into junk buffer
-                error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
-              else
-                // read into image buffer
-                error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
-              if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
+              ++count;
+              error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
+              if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", error);
             }
         }
         else {
           for(int i=0; i<height; ++i) {
-            if (image_found)
-              // image buffer already filled; read in into junk buffer
-              error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
-            else
-              // read into image buffer
-              error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
-            if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
+            error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
+            if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", error);
           }
         }
         image_found = true;
@@ -466,10 +461,10 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
       case EXTENSION_RECORD_TYPE:
         // Skip any extension blocks in file:
         error = DGifGetExtension(in_file.get(), &ext_code, &extension);
-        if (error == GIF_ERROR) GifErrorHandler("DGifGetExtension", in_file->Error);
+        if (error == GIF_ERROR) GifErrorHandler("DGifGetExtension", error);
         while(extension != NULL) {
           error = DGifGetExtensionNext(in_file.get(), &extension);
-          if(error == GIF_ERROR) GifErrorHandler("DGifGetExtensionNext", in_file->Error);
+          if(error == GIF_ERROR) GifErrorHandler("DGifGetExtensionNext", error);
         }
         break;
       case TERMINATE_RECORD_TYPE:
