@@ -441,13 +441,23 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
           // Need to perform 4 passes on the images:
           for(int i=0; i<4; ++i)
             for(int j=row+InterlacedOffset[i]; j<row+height; j+=InterlacedJumps[i]) {
-              error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
+              if (image_found)
+                // image buffer already filled; read in into junk buffer
+                error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
+              else
+                // read into image buffer
+                error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
               if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
             }
         }
         else {
           for(int i=0; i<height; ++i) {
-            error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
+            if (image_found)
+              // image buffer already filled; read in into junk buffer
+              error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
+            else
+              // read into image buffer
+              error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
             if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
           }
         }
