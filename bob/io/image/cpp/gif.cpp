@@ -395,6 +395,8 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
   // screen is device independent - it's the screen defined by the
   // GIF file parameters.
   std::vector<boost::shared_array<GifPixelType> > screen_buffer;
+  // The second buffer is just used if the image has already been read
+  boost::shared_array<GifPixelType> temp_buffer(new GifPixelType[in_file->SWidth]);
 
   // Size in bytes one row.
   int size = in_file->SWidth*sizeof(GifPixelType);
@@ -439,13 +441,23 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
           // Need to perform 4 passes on the images:
           for(int i=0; i<4; ++i)
             for(int j=row+InterlacedOffset[i]; j<row+height; j+=InterlacedJumps[i]) {
-              error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
+              if (image_found)
+                // image buffer already filled; read in into junk buffer
+                error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
+              else
+                // read into image buffer
+                error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
               if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
             }
         }
         else {
           for(int i=0; i<height; ++i) {
-            error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
+            if (image_found)
+              // image buffer already filled; read in into junk buffer
+              error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
+            else
+              // read into image buffer
+              error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
             if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
           }
         }
