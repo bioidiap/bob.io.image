@@ -16,9 +16,8 @@ def to_matplotlib(img):
     import numpy as np
 
     if img.ndim == 3:
-        return np.moveaxis(img, 0, -1)
-    else:
-        return img
+        img = np.moveaxis(img, 0, -1)
+    return img
 
 
 def imshow(img, cmap=None, **kwargs):
@@ -38,4 +37,4 @@ def imshow(img, cmap=None, **kwargs):
     if cmap is None and img.ndim == 2:
         cmap = 'gray'
 
-    plt.imshow(to_matplotlib(img), cmap=cmap, **kwargs)
+    return plt.imshow(to_matplotlib(img), cmap=cmap, **kwargs)
