@@ -5,10 +5,8 @@
  * @brief Tests for bob::io::base
  */
 
-#include <bob.io.base/api.h>
 #include <bob.blitz/cleanup.h>
 #include <bob.extension/documentation.h>
-#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
 
 #include <bob.io.image/image.h>
@@ -197,7 +195,7 @@ static PyMethodDef module_methods[] = {
   {0}  /* Sentinel */
 };
 
-PyDoc_STRVAR(module_docstr, "Tests for bob::io::base");
+PyDoc_STRVAR(module_docstr, "Tests for bob::io::image");
 
 #if PY_VERSION_HEX >= 0x03000000
 static PyModuleDef module_definition = {
