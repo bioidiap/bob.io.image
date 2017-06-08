@@ -60,7 +60,7 @@ inline blitz::Array<uint8_t,3> read_color_image(const std::string& filename, std
   throw std::runtime_error("The filename extension '" + extension + "' is not known or not supported for color images");
 }
 
-blitz::Array<uint8_t,2> read_gray_image(const std::string& filename, std::string extension=""){
+inline blitz::Array<uint8_t,2> read_gray_image(const std::string& filename, std::string extension=""){
   if (extension.empty())
     extension = boost::filesystem::path(filename).extension().string();
   boost::algorithm::to_lower(extension);
@@ -80,7 +80,7 @@ blitz::Array<uint8_t,2> read_gray_image(const std::string& filename, std::string
 }
 
 
-void write_color_image(const blitz::Array<uint8_t,3>& image, const std::string& filename, std::string extension=""){
+inline void write_color_image(const blitz::Array<uint8_t,3>& image, const std::string& filename, std::string extension=""){
   if (extension.empty())
     extension = boost::filesystem::path(filename).extension().string();
   boost::algorithm::to_lower(extension);
@@ -102,7 +102,7 @@ void write_color_image(const blitz::Array<uint8_t,3>& image, const std::string& 
   throw std::runtime_error("The filename extension '" + extension + "' is not known or not supported for color images");
 }
 
-void write_gray_image(const blitz::Array<uint8_t,2>& image, const std::string& filename, std::string extension=""){
+inline void write_gray_image(const blitz::Array<uint8_t,2>& image, const std::string& filename, std::string extension=""){
   if (extension.empty())
     extension = boost::filesystem::path(filename).extension().string();
   boost::algorithm::to_lower(extension);
