@@ -124,7 +124,7 @@ def test_image_load():
 
 
 def test_cpp_interface():
-  from ._library import _test_io
+  from ._test import _test_io
   import tempfile
   import shutil
 
