@@ -12,7 +12,8 @@
 
 .. todolist::
 
-This module provides a plugin for :py:mod:`bob.io.base` that allows |project|
+This package is a part of `Bob`_.
+It provides a plugin for :py:mod:`bob.io.base` that allows |project|
 to read and write images using its native API (:py:func:`bob.io.base.load` and
 :py:func:`bob.io.base.save`).
 
@@ -25,7 +26,8 @@ At present, this plugin provides support for the following types of images:
 * BMP (color only)
 * Netpbm images (binary - PBM, gray - PGM, color - PPM)
 
-Additionally, we provide the pure C++ interface to read and write these kind of images, see :doc:`cpp_api`.
+Additionally, we provide the pure C++ interface to read and write these kind of
+images, see :doc:`cpp_api`.
 
 Documentation
 -------------
