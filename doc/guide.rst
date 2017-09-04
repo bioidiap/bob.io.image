@@ -82,6 +82,9 @@ Or you can just get a view (not copy) of your image that is
   >>> assert img_view_for_matplotlib.shape[-1] == 3
   >>> assert img_view_for_matplotlib.base is img
 
+You can also get the original image back using :py:func:`bob.io.image.to_bob`.
+
+
 .. testcleanup:: *
 
   import shutil

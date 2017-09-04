@@ -10,7 +10,7 @@ from . import version
 from .version import module as __version__
 
 from ._library import *
-from .utils import imshow, to_matplotlib
+from .utils import *
 
 import os
 
