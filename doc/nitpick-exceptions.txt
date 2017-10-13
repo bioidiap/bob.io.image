@@ -9,4 +9,3 @@ cpp:typeOrConcept std::string
 cpp:typeOrConcept blitz
 cpp:typeOrConcept blitz::Array
 cpp:typeOrConcept uint8_t
-py:mod matplotlib.pyplot
