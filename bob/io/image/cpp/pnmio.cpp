@@ -309,13 +309,13 @@ int read_pbm_data(FILE *f, int *img_in, int img_size, int is_ascii, int img_widt
     if (is_ascii == 1) {
       read_count = fscanf(f, "%d", &lum_val);
       if (read_count < 1) return -1;
-      if (i >= img_size) return -1;
+      if (i >= img_size) break;
       img_in[i++] = lum_val;
     } else {
       lum_val = fgetc(f);
       /* Decode the image contents byte-by-byte. */
       for (k = 0; k < 8; k++) {
-        if (i >= img_size) return -1;
+        if (i >= img_size) break;
         img_in[i++] = (lum_val >> (7-k)) & 0x1;
         // fprintf(stderr, "i: %d, %d\n", i, img_in[i]);
         row_position++;
@@ -355,7 +355,7 @@ int read_pgm_data(FILE *f, int *img_in, int img_size, int is_ascii,
         lum_val |= fgetc(f);
       }
     }
-    if (i >= img_size) return -1;
+    if (i >= img_size) break;
     img_in[i++] = lum_val;
   }
   // fclose(f);
@@ -397,7 +397,7 @@ int read_ppm_data(FILE *f, int *img_in, int img_size, int is_ascii,
         b_val |= fgetc(f);
       }
     }
-    if (i >= img_size) return -1;
+    if (i >= img_size) break;
     img_in[i++] = r_val;
     img_in[i++] = g_val;
     img_in[i++] = b_val;

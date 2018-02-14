@@ -107,7 +107,7 @@ def test_netpbm():
 
 def test_image_load():
   # test that the generic bob.io.image.load function works as expected
-  for filename in ('test.jpg', 'cmyk.jpg', 'test.pbm', 'test.pgm', 'test.ppm', 'img_rgba_color.png'):
+  for filename in ('test.jpg', 'cmyk.jpg', 'test.pbm', 'test_corrupted.pbm', 'test.pgm', 'test_corrupted.pgm', 'test.ppm', 'test_corrupted.ppm', 'img_rgba_color.png'):
     full_file = test_utils.datafile(filename, __name__)
     # load with just image name
     i1 = bob.io.image.load(full_file)
