@@ -117,16 +117,8 @@ pm_openw(const char * const name) {
 
 void
 pm_close(FILE * const f) {
-  // fprintf(stderr, "I am closing a file\n");
-  fflush( f );
-  // if ( ferror( f ) )
-    // boost::format m("a file read or write error occurred at some point");
-    // throw std::runtime_error(m.str());
-  if ( f != stdin )
-    fclose( f );
-  //   if ( fclose( f ) != 0 )
-      // boost::format m("cannot close file.");
-      // throw std::runtime_error(m.str());
+  fflush(f);
+  if (f != stdin) fclose( f );
 }
 
 static boost::shared_ptr<std::FILE> make_cfile(const char *filename, const char *flags)
@@ -168,12 +160,12 @@ static void pnm_readpaminit(FILE *file, struct pam * const pamP, const int size)
     if (img_colors >> 8 == 0)       pamP->bytes_per_sample = 1;
     else if (img_colors >> 16 == 0) pamP->bytes_per_sample = 2;
   } else {
-    boost::format m("Unknown PNM/PFM image format.");
+    boost::format m("pnm_readpaminit(): Unknown PNM/PFM image format.");
     throw std::runtime_error(m.str());
   }
 
   if (read_err != 0) {
-    boost::format m("Something went wrong when reading the image file.");
+    boost::format m("pnm_readpaminit(): Something went wrong when reading the image file.");
     throw std::runtime_error(m.str());
   }
 
@@ -214,7 +206,7 @@ static void pnm_readpam(struct pam * const pamP, int *img_data) {
   }
 
   if (read_err != 0) {
-    boost::format m("Something went wrong when reading the image file.");
+    boost::format m("pnm_readpam(): Something went wrong when reading the image file.");
     throw std::runtime_error(m.str());
   }
 }
@@ -240,7 +232,7 @@ static void pnm_writepam(struct pam * const pamP, int *img_data) {
   }
 
   if (write_err != 0) {
-    boost::format m("Something went wrong when writing the image file.");
+    boost::format m("pnm_writepam(): Something went wrong when writing the image file.");
     throw std::runtime_error(m.str());
   }
 }
