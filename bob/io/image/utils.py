@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def to_matplotlib(img):
@@ -64,6 +63,7 @@ def imshow(img, cmap=None, **kwargs):
     object
         Returns whatever ``plt.imshow`` returns.
     '''
+    import matplotlib.pyplot as plt
 
     if cmap is None and img.ndim == 2:
         cmap = 'gray'

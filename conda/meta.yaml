@@ -40,9 +40,10 @@ requirements:
   run:
     - python
     - setuptools
-    - matplotlib
     - boost
     - {{ pin_compatible('numpy') }}
+  run_constrained:
+    - matplotlib
 
 test:
   imports:
@@ -59,6 +60,7 @@ test:
     - coverage
     - sphinx
     - sphinx_rtd_theme
+    - matplotlib
 
 about:
   home: https://www.idiap.ch/software/bob/
