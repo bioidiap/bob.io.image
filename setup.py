@@ -127,7 +127,6 @@ class jpeg:
   def macros(self):
     return [
         ('HAVE_%s' % self.name.upper(), '1'),
-        ('%s_VERSION' % self.name.upper(), '"%s"' % self.version),
         ]
 
 def libtiff_version(header):
@@ -223,7 +222,6 @@ class tiff:
   def macros(self):
     return [
         ('HAVE_%s' % self.name.upper(), '1'),
-        ('%s_VERSION' % self.name.upper(), '"%s"' % self.version),
         ]
 
 def libgif_version(header):
@@ -325,7 +323,6 @@ class gif:
   def macros(self):
     return [
         ('HAVE_%s' % self.name.upper(), '1'),
-        ('%s_VERSION' % self.name.upper(), '"%s"' % self.version),
         ]
 
 jpeg_pkg = jpeg()

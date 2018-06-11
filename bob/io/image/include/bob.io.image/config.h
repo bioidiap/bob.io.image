@@ -47,8 +47,8 @@
    */
 #ifdef HAVE_LIBJPEG
   static PyObject* libjpeg_version() {
-    boost::format f("%d (compiled with %d bits depth)");
-    f % LIBJPEG_VERSION % BITS_IN_JSAMPLE;
+    boost::format f("%d.%d (compiled with %d bits depth)");
+    f % JPEG_LIB_VERSION_MAJOR % JPEG_LIB_VERSION_MINOR % BITS_IN_JSAMPLE;
     return Py_BuildValue("s", f.str().c_str());
   }
 #endif
@@ -89,13 +89,9 @@
    */
 #ifdef HAVE_GIFLIB
   static PyObject* giflib_version() {
-  #ifdef GIFLIB_VERSION
-   return Py_BuildValue("s", GIFLIB_VERSION);
-  #else
     boost::format f("%s.%s.%s");
     f % BOOST_PP_STRINGIZE(GIFLIB_MAJOR) % BOOST_PP_STRINGIZE(GIFLIB_MINOR) % BOOST_PP_STRINGIZE(GIFLIB_RELEASE);
     return Py_BuildValue("s", f.str().c_str());
-  #endif
   }
 #endif
 
