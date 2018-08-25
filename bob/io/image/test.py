@@ -105,7 +105,7 @@ def test_netpbm():
   # because of re-compression
 
 
-def test_gif():
+def notest_gif():
   transcode(test_utils.datafile('test.gif', __name__))
 
 
