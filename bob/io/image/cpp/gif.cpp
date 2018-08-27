@@ -481,7 +481,7 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
   } while (!terminated);
 
   if (!image_found){
-    std::runtime_error("GIF: image does not contain an image section");
+    throw std::runtime_error("GIF: image does not contain an image section");
   }
 
   // Lets dump it - set the global variables required and do it:
