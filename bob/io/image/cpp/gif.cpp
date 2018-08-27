@@ -395,6 +395,8 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
   // screen is device independent - it's the screen defined by the
   // GIF file parameters.
   std::vector<boost::shared_array<GifPixelType> > screen_buffer;
+  // The second buffer is just used if the image has already been read
+  boost::shared_array<GifPixelType> temp_buffer(new GifPixelType[in_file->SWidth]);
 
   // Size in bytes one row.
   int size = in_file->SWidth*sizeof(GifPixelType);
@@ -415,52 +417,71 @@ static void im_load_color(boost::shared_ptr<GifFileType> in_file, bob::io::base:
   GifByteType *extension;
   int InterlacedOffset[] = { 0, 4, 2, 1 }; // The way Interlaced image should.
   int InterlacedJumps[] = { 8, 8, 4, 2 }; // be read - offsets and jumps...
-  int row, col, width, height, count, ext_code;
-  int error = DGifGetRecordType(in_file.get(), &record_type);
-  if(error == GIF_ERROR)
-    GifErrorHandler("DGifGetRecordType", error);
-  switch(record_type) {
-    case IMAGE_DESC_RECORD_TYPE:
-      error = DGifGetImageDesc(in_file.get());
-      if (error == GIF_ERROR) GifErrorHandler("DGifGetImageDesc", error);
-      row = in_file->Image.Top; // Image Position relative to Screen.
-      col = in_file->Image.Left;
-      width = in_file->Image.Width;
-      height = in_file->Image.Height;
-      if(in_file->Image.Left + in_file->Image.Width > in_file->SWidth ||
-        in_file->Image.Top + in_file->Image.Height > in_file->SHeight)
-      {
-        throw std::runtime_error("GIF: the dimensions of image larger than the dimensions of the canvas.");
-      }
-      if(in_file->Image.Interlace) {
-        // Need to perform 4 passes on the images:
-        for(int i=count=0; i<4; ++i)
-          for(int j=row+InterlacedOffset[i]; j<row+height; j+=InterlacedJumps[i]) {
-            ++count;
-            error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
-            if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", error);
-          }
-      }
-      else {
-        for(int i=0; i<height; ++i) {
-          error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
-          if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", error);
+  int row, col, width, height, ext_code;
+  bool terminated = false;
+  bool image_found = false;
+  do{
+    int error = DGifGetRecordType(in_file.get(), &record_type);
+    if(error == GIF_ERROR)
+      GifErrorHandler("DGifGetRecordType", in_file->Error);
+    switch(record_type) {
+      case IMAGE_DESC_RECORD_TYPE:
+        error = DGifGetImageDesc(in_file.get());
+        if (error == GIF_ERROR) GifErrorHandler("DGifGetImageDesc", in_file->Error);
+        row = in_file->Image.Top; // Image Position relative to Screen.
+        col = in_file->Image.Left;
+        width = in_file->Image.Width;
+        height = in_file->Image.Height;
+        if(in_file->Image.Left + in_file->Image.Width > in_file->SWidth ||
+          in_file->Image.Top + in_file->Image.Height > in_file->SHeight)
+        {
+          throw std::runtime_error("GIF: the dimensions of image larger than the dimensions of the canvas.");
         }
-      }
-      break;
-    case EXTENSION_RECORD_TYPE:
-      // Skip any extension blocks in file:
-      error = DGifGetExtension(in_file.get(), &ext_code, &extension);
-      if (error == GIF_ERROR) GifErrorHandler("DGifGetExtension", error);
-      while(extension != NULL) {
-        error = DGifGetExtensionNext(in_file.get(), &extension);
-        if(error == GIF_ERROR) GifErrorHandler("DGifGetExtensionNext", error);
-      }
-      break;
-    case TERMINATE_RECORD_TYPE:
-      break;
-    default: // Should be trapped by DGifGetRecordType.
-      break;
+        if(in_file->Image.Interlace) {
+          // Need to perform 4 passes on the images:
+          for(int i=0; i<4; ++i)
+            for(int j=row+InterlacedOffset[i]; j<row+height; j+=InterlacedJumps[i]) {
+              if (image_found)
+                // image buffer already filled; read in into junk buffer
+                error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
+              else
+                // read into image buffer
+                error = DGifGetLine(in_file.get(), &screen_buffer[j][col], width);
+              if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
+            }
+        }
+        else {
+          for(int i=0; i<height; ++i) {
+            if (image_found)
+              // image buffer already filled; read in into junk buffer
+              error = DGifGetLine(in_file.get(), &temp_buffer[col], width);
+            else
+              // read into image buffer
+              error = DGifGetLine(in_file.get(), &screen_buffer[row++][col], width);
+            if(error == GIF_ERROR) GifErrorHandler("DGifGetLine", in_file->Error);
+          }
+        }
+        image_found = true;
+        break;
+      case EXTENSION_RECORD_TYPE:
+        // Skip any extension blocks in file:
+        error = DGifGetExtension(in_file.get(), &ext_code, &extension);
+        if (error == GIF_ERROR) GifErrorHandler("DGifGetExtension", in_file->Error);
+        while(extension != NULL) {
+          error = DGifGetExtensionNext(in_file.get(), &extension);
+          if(error == GIF_ERROR) GifErrorHandler("DGifGetExtensionNext", in_file->Error);
+        }
+        break;
+      case TERMINATE_RECORD_TYPE:
+        terminated = true;
+        break;
+      default: // Should be trapped by DGifGetRecordType.
+        break;
+    }
+  } while (!terminated);
+
+  if (!image_found){
+    std::runtime_error("GIF: image does not contain an image section");
   }
 
   // Lets dump it - set the global variables required and do it:
@@ -553,15 +574,15 @@ static void im_save_color(const bob::io::base::array::interface& b, boost::share
 
   error = EGifPutScreenDesc(out_file.get(), width, height, ExpNumOfColors, 0,
       OutputColorMap);
-  if (error == GIF_ERROR) GifErrorHandler("EGifPutScreenDesc", error);
+  if (error == GIF_ERROR) GifErrorHandler("EGifPutScreenDesc", out_file->Error);
 
   error = EGifPutImageDesc(out_file.get(), 0, 0, width, height, false, NULL);
-  if (error == GIF_ERROR) GifErrorHandler("EGifPutImageDesc", error);
+  if (error == GIF_ERROR) GifErrorHandler("EGifPutImageDesc", out_file->Error);
 
   GifByteType *ptr = output_buffer.get();
   for(int i=0; i<height; ++i) {
     error = EGifPutLine(out_file.get(), ptr, width);
-    if (error == GIF_ERROR) GifErrorHandler("EGifPutImageDesc", error);
+    if (error == GIF_ERROR) GifErrorHandler("EGifPutImageDesc", out_file->Error);
     ptr += width;
   }
 
