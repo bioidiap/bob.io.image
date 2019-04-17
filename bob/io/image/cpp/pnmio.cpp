@@ -462,7 +462,7 @@ int write_pgm_file(FILE *f, int *img_out,
 
   /* Write the image data. */
   for (i = 0; i < y_scaled_size; ++i) {
-    for (j = 0; j < x_scaled_size; j++) {
+    for (j = 0; j < x_scaled_size; ++j) {
       if (is_ascii == 1) {
         fprintf(f, "%d ", img_out[i*x_scaled_size+j]);
         if (((i*x_scaled_size+j) % linevals) == (linevals-1)) {
@@ -508,7 +508,7 @@ int write_ppm_file(FILE *f, int *img_out,
 
   /* Write the image data. */
   for (i = 0; i < y_scaled_size; ++i) {
-    for (j = 0; j < x_scaled_size; j++) {
+    for (j = 0; j < x_scaled_size; ++j) {
       if (is_ascii == 1) {
         fprintf(f, "%d %d %d ",
           img_out[3*(i*x_scaled_size+j)+0],
