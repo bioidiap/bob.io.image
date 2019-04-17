@@ -25,7 +25,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
-#include <iostream>
 #include "pnmio.h"
 
 #define  MAXLINE         1024
