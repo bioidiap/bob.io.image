@@ -101,6 +101,7 @@ def test_netpbm():
   transcode(test_utils.datafile('test.ppm', __name__))  # indexed, works fine
   transcode(test_utils.datafile('test_2.pgm', __name__))  # indexed, works fine
   transcode(test_utils.datafile('test_2.ppm', __name__))  # indexed, works fine
+  transcode(test_utils.datafile('test_spaces.pgm', __name__))  # indexed, works fine
   # transcode(test_utils.datafile('test.jpg', __name__)) #does not work
   # because of re-compression
 
@@ -112,8 +113,8 @@ def notest_gif():
 def test_image_load():
   # test that the generic bob.io.image.load function works as expected
   for filename in ('test.jpg', 'cmyk.jpg', 'test.pbm', 'test_corrupted.pbm',
-      'test.pgm', 'test_corrupted.pgm', 'test.ppm', 'test_corrupted.ppm',
-      'img_rgba_color.png', 'test.gif'):
+      'test.pgm', 'test_corrupted.pgm', 'test_spaces.pgm', 'test.ppm',
+      'test_corrupted.ppm', 'img_rgba_color.png', 'test.gif'):
     full_file = test_utils.datafile(filename, __name__)
     # load with just image name
     i1 = bob.io.image.load(full_file)
