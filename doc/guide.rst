@@ -83,6 +83,10 @@ Or you can just get a view (not copy) of your image that is
   >>> assert img_view_for_matplotlib.base is img
 
 You can also get the original image back using :py:func:`bob.io.image.to_bob`.
+This function works with images, batches of images, videos, and higher
+dimensional arrays that contain images.
+Moreover, see :any:`bob.io.image.opencvbgr_to_bob` and
+:any:`bob.io.image.bob_to_opencvbgr`.
 
 
 .. testcleanup:: *
