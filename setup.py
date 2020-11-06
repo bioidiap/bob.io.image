@@ -10,6 +10,7 @@ from setuptools import setup, find_packages, dist
 dist.Distribution(dict(setup_requires=['bob.extension', 'bob.blitz'] + bob_packages))
 from bob.extension.utils import egrep, find_header, find_library
 from bob.blitz.extension import Extension, Library, build_ext
+from distutils.version import LooseVersion
 
 from bob.extension.utils import load_requirements
 build_requires = load_requirements()
@@ -334,6 +335,8 @@ system_include_dirs = [
     tiff_pkg.include_directory,
     gif_pkg.include_directory,
     ]
+if LooseVersion(gif_pkg.version) >= LooseVersion("5.1.9"):
+  system_include_dirs.append("bob/io/image/giflib")
 
 library_dirs = [
     jpeg_pkg.library_directory,
