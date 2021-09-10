@@ -37,13 +37,14 @@ requirements:
     - libtiff {{ libtiff }}
     - boost {{ boost }}
     - numpy {{ numpy }}
+    - matplotlib {{ matplotlib }}
   run:
     - python
     - setuptools
     - boost
     - {{ pin_compatible('numpy') }}
   run_constrained:
-    - matplotlib
+    - {{ pin_compatible('matplotlib') }}
 
 test:
   imports:
